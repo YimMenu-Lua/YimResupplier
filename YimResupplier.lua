@@ -4,7 +4,7 @@ yim_resupplier:add_imgui(function()
     ImGui.Text("Hangar Cargo")
         if ImGui.Button("Source Random Crate(s)") then
             script.run_in_fiber(function()
-            stats.set_bool_masked("MP0_DLC22022PSTAT_BOOL3", true, 9)
+            stats.set_bool_masked("MP"..stats.get_int("MPPLY_LAST_MP_CHAR").."_DLC22022PSTAT_BOOL3", true, 9)
             end)
         end
     ImGui.Text("MC Supplies")
