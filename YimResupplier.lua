@@ -9,7 +9,6 @@ yim_resupplier:add_imgui(function()
         end
 
     ImGui.Text("MC Supplies")
-
         if ImGui.Button("Fill Fake Cash Supplies") then
             globals.set_int(1662873 + 1, 1)
         end
