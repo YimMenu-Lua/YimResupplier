@@ -7,26 +7,28 @@ yim_resupplier:add_imgui(function()
             stats.set_bool_masked("MP"..stats.get_int("MPPLY_LAST_MP_CHAR").."_DLC22022PSTAT_BOOL3", true, 9)
             end)
         end
+
     ImGui.Text("MC Supplies")
+
         if ImGui.Button("Fill Fake Cash Supplies") then
-            globals.set_int(1662873 + 1 + 0, 1)
+            globals.set_int(1662873 + 1, 1)
         end
         if ImGui.Button("Fill Cocaine Supplies") then
-            globals.set_int(1662873 + 1 + 1, 1)
+            globals.set_int(1662873 + 2, 1)
         end
         if ImGui.Button("Fill Meth Supplies") then
-            globals.set_int(1662873 + 1 + 2, 1)  
-        end         
+            globals.set_int(1662873 + 3, 1)
+        end
         if ImGui.Button("Fill Weed Supplies") then
-            globals.set_int(1662873 + 1 + 3, 1)
+            globals.set_int(1662873 + 4, 1)
         end
         if ImGui.Button("Fill Document Forgery Supplies") then
-            globals.set_int(1662873 + 1 + 4, 1)
+            globals.set_int(1662873 + 5, 1)
         end
         if ImGui.Button("Fill Bunker Supplies") then
-            globals.set_int(1662873 + 1 + 5, 1)    
+            globals.set_int(1662873 + 6, 1)
         end
         if ImGui.Button("Fill Acid Lab Supplies") then
-            globals.set_int(1662873 + 1 + 6, 1)  
+            globals.set_int(1662873 + 7, 1)
         end
-end)      
+end)
