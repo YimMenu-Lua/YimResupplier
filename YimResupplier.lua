@@ -3,8 +3,8 @@
 online_version = memory.scan_pattern("8B C3 33 D2 C6 44 24 20"):add(0x24):rip()
 if tonumber(online_version:get_string()) == 3179 then
   yim_resupplier = gui.get_tab("YimResupplier")
-  if NETWORK.NETWORK_IS_SESSION_STARTED() then
-    yim_resupplier:add_imgui(function()
+  yim_resupplier:add_imgui(function()
+    if NETWORK.NETWORK_IS_SESSION_STARTED() then
       local MPx          = "MP"..stats.get_character_index()
       local hangarSupply = stats.get_int(MPx.."_HANGAR_CONTRABAND_TOTAL")
       local cashSupply   = stats.get_int(MPx.."_MATTOTALFORFACTORY0")
@@ -119,10 +119,10 @@ if tonumber(online_version:get_string()) == 3179 then
       -- else
       --   ImGui.Text("You don't own an Acid Lab.")
       -- end
-    end)
-  else
-    yim_resupplier:add_text("YimResupplier Doesn't work in Single Player."):set_font("subtitle")
-  end
+    else
+      ImGui.Text("YimResupplier doesn't work in Single Player.")
+    end
+  end)
 elseif tonumber(online_version:get_string()) > 3179 then
   gui.show_message("YimResupplier", "YimResupplier is not up-to-date.\nPlease update the script!")
   yim_resupplier = gui.get_tab("YimResupplier")
