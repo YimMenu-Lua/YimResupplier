@@ -4,8 +4,7 @@ A Lua script that instantly resupplies MC businesses in GTA Online.
 > [!NOTE]
 > This script can not magically fill supplies for a business you don't own. Also make sure your businesses are not raided/shutdown before trying to fill them up.
 
-
-![YimResupplier](https://github.com/xesdoog/YimResupplier/assets/66764345/87ba3695-ea69-4645-919c-3711024ff9c8)
+![image](https://github.com/YimMenu-Lua/YimResupplier/assets/66764345/edff775a-5c19-46bf-a14e-84758edbd485)
 
 ## Credits
 [sch-Ida](https://github.com/sch-lda) for the online version check.
