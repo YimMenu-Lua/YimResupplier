@@ -555,7 +555,7 @@ if tonumber(online_version:get_string()) == 3179 then
         -- end
         ImGui.EndTabItem()
       end
-      if ImGui.BeginTabItem("Production Review") then
+      if ImGui.BeginTabItem("Production Overview") then
         local function formatMoney(value)
           return "$"..tostring(value):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
         end
@@ -708,7 +708,7 @@ if tonumber(online_version:get_string()) == 3179 then
         local bunkerProduct = stats.get_int(MPx.."_PRODTOTALFORFACTORY5")
         local bunkerTotal   = ((globals.get_int(262145 + 21747) + bunkerOffset1 + bunkerOffset2) * bunkerProduct)
         ImGui.Text("Product:");ImGui.SameLine();ImGui.Dummy(5, 1);ImGui.SameLine();ImGui.ProgressBar((bunkerProduct/100), 160, 25, tostring(bunkerProduct).." Crates ("..tostring(bunkerProduct).."%)")
-        ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.Text("Value:");ImGui.SameLine();ImGui.Text(formatMoney(bunkerTotal))
+        ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.Text("Value:");ImGui.SameLine();ImGui.Text("BC: "..formatMoney(bunkerTotal).."\nLS: "..formatMoney(math.floor(bunkerTotal * 1.5)))
         ---------------------------------------Acid Lab-------------------------------------------------------------------
         ImGui.Separator();ImGui.Text("Acid Lab:   ");ImGui.SameLine()
         acidUpdgrade, used = ImGui.Checkbox("Equipment Upgrade##acid", acidUpdgrade, true)
