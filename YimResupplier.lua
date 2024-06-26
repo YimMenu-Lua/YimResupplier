@@ -405,7 +405,7 @@ end
 -------------------------------------------------------------------------------
 
 online_version = memory.scan_pattern("8B C3 33 D2 C6 44 24 20"):add(0x24):rip()
-if tonumber(online_version:get_string()) == 3179 then
+if tonumber(online_version:get_string()) == 3258 then
   yim_resupplier = gui.get_tab("YimResupplier")
   default_config = {
        cashUpdgrade1   = false,
@@ -481,7 +481,7 @@ if tonumber(online_version:get_string()) == 3179 then
           if math.ceil(cashSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##FakeCash") then
-              globals.set_int(1662873 + 0 + 1, 1)
+              globals.set_int(1663174 + 0 + 1, 1) -- 1662873 -> 1663174
             end
           end
         -- else
@@ -492,7 +492,7 @@ if tonumber(online_version:get_string()) == 3179 then
           if math.ceil(cokeSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##Cocaine") then
-              globals.set_int(1662873 + 1 + 1, 1)
+              globals.set_int(1663174 + 1 + 1, 1)
             end
           end
         -- else
@@ -503,7 +503,7 @@ if tonumber(online_version:get_string()) == 3179 then
           if math.ceil(methSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##Meth") then
-              globals.set_int(1662873 + 2 + 1, 1)
+              globals.set_int(1663174 + 2 + 1, 1)
             end
           end
         -- else
@@ -514,7 +514,7 @@ if tonumber(online_version:get_string()) == 3179 then
           if math.ceil(weedSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##Weed") then
-              globals.set_int(1662873 + 3 + 1, 1)
+              globals.set_int(1663174 + 3 + 1, 1)
             end
           end
         -- else
@@ -525,7 +525,7 @@ if tonumber(online_version:get_string()) == 3179 then
           if math.ceil(dfSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##DocumentForgery") then
-              globals.set_int(1662873 + 4 + 1, 1)
+              globals.set_int(1663174 + 4 + 1, 1)
             end
           end
         -- else
@@ -536,7 +536,7 @@ if tonumber(online_version:get_string()) == 3179 then
           if math.ceil(bunkerSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##Bunker") then
-              globals.set_int(1662873 + 5 + 1, 1)
+              globals.set_int(1663174 + 5 + 1, 1)
             end
           end
         -- else
@@ -547,7 +547,7 @@ if tonumber(online_version:get_string()) == 3179 then
           if math.ceil(acidSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##AcidLab") then
-              globals.set_int(1662873 + 6 + 1, 1)
+              globals.set_int(1663174 + 6 + 1, 1)
             end
           end
         -- else
@@ -576,17 +576,17 @@ if tonumber(online_version:get_string()) == 3179 then
           saveToConfig("cashUpdgrade2", cashUpdgrade2)
         end
         if cashUpdgrade1 then
-          cashOffset1  = globals.get_int(262145 + 17635)
+          cashOffset1  = globals.get_int(262145 + 17326)
         else
           cashOffset1 = 0
         end
         if cashUpdgrade2 then
-          cashOffset2  = globals.get_int(262145 + 17641)
+          cashOffset2  = globals.get_int(262145 + 17332)
         else
           cashOffset2 = 0
         end
         local cashProduct = stats.get_int(MPx.."_PRODTOTALFORFACTORY0")
-        local cashTotal   = ((globals.get_int(262145 + 17629) + cashOffset1 + cashOffset2) * cashProduct)
+        local cashTotal   = ((globals.get_int(262145 + 17320) + cashOffset1 + cashOffset2) * cashProduct)
         ImGui.Text("Product:");ImGui.SameLine();ImGui.Dummy(5, 1);ImGui.SameLine();ImGui.ProgressBar((cashProduct/40), 160, 25, tostring(cashProduct).." Boxes ("..tostring(math.floor(cashProduct * 2.5)).."%)")
         ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.Text("Value:");ImGui.SameLine()ImGui.Text(formatMoney(cashTotal))
         ---------------------------------------Coke----------------------------------------------------------------------
@@ -600,17 +600,17 @@ if tonumber(online_version:get_string()) == 3179 then
           saveToConfig("cokeUpdgrade2", cokeUpdgrade2)
         end
         if cokeUpdgrade1 then
-          cokeOffset1  = globals.get_int(262145 + 17636)
+          cokeOffset1  = globals.get_int(262145 + 17327)
         else
           cokeOffset1 = 0
         end
         if cokeUpdgrade2 then
-          cokeOffset2  = globals.get_int(262145 + 17642)
+          cokeOffset2  = globals.get_int(262145 + 17333)
         else
           cokeOffset2 = 0
         end
         local cokeProduct = stats.get_int(MPx.."_PRODTOTALFORFACTORY1")
-        local cokeTotal   = ((globals.get_int(262145 + 17630) + cokeOffset1 + cokeOffset2) * cokeProduct)
+        local cokeTotal   = ((globals.get_int(262145 + 17321) + cokeOffset1 + cokeOffset2) * cokeProduct)
         ImGui.Text("Product:");ImGui.SameLine();ImGui.Dummy(5, 1);ImGui.SameLine();ImGui.ProgressBar((cokeProduct/10), 160, 25, tostring(cokeProduct).." Kilos ("..tostring(cokeProduct * 10).."%)")
         ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.Text("Value:")ImGui.SameLine();ImGui.Text(formatMoney(cokeTotal))
         ---------------------------------------Meth-----------------------------------------------------------------------
@@ -624,17 +624,17 @@ if tonumber(online_version:get_string()) == 3179 then
           saveToConfig("methUpdgrade2", methUpdgrade2)
         end
         if methUpdgrade1 then
-          methOffset1  = globals.get_int(262145 + 17637)
+          methOffset1  = globals.get_int(262145 + 17328)
         else
           methOffset1 = 0
         end
         if methUpdgrade2 then
-          methOffset2  = globals.get_int(262145 + 17643)
+          methOffset2  = globals.get_int(262145 + 17334)
         else
           methOffset2 = 0
         end
         local methProduct = stats.get_int(MPx.."_PRODTOTALFORFACTORY2")
-        local methTotal   = ((globals.get_int(262145 + 17631)+ methOffset1 + methOffset2) * methProduct)
+        local methTotal   = ((globals.get_int(262145 + 17322)+ methOffset1 + methOffset2) * methProduct)
         ImGui.Text("Product:");ImGui.SameLine();ImGui.Dummy(5, 1);ImGui.SameLine();ImGui.ProgressBar((methProduct/20), 160, 25, tostring(methProduct).." Pounds ("..tostring(methProduct * 5).."%)")
         ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.Text("Value:");ImGui.SameLine()ImGui.Text(formatMoney(methTotal))
         ---------------------------------------Weed------------------------------------------------------------------------
@@ -648,17 +648,17 @@ if tonumber(online_version:get_string()) == 3179 then
           saveToConfig("weedUpdgrade2", weedUpdgrade2)
         end
         if weedUpdgrade1 then
-          weedOffset1  = globals.get_int(262145 + 17638)
+          weedOffset1  = globals.get_int(262145 + 17329)
         else
           weedOffset1 = 0
         end
         if weedUpdgrade2 then
-          weedOffset2  = globals.get_int(262145 + 17644)
+          weedOffset2  = globals.get_int(262145 + 17335)
         else
           weedOffset2 = 0
         end
         local weedProduct = stats.get_int(MPx.."_PRODTOTALFORFACTORY3")
-        local weedTotal   = ((globals.get_int(262145 + 17632) + weedOffset1 + weedOffset2) * weedProduct)
+        local weedTotal   = ((globals.get_int(262145 + 17323) + weedOffset1 + weedOffset2) * weedProduct)
         ImGui.Text("Product:");ImGui.SameLine();ImGui.Dummy(5, 1);ImGui.SameLine();ImGui.ProgressBar((weedProduct/80), 160, 25, tostring(weedProduct).." Pounds ("..tostring(math.floor(weedProduct / 8 * 10)).."%)")
         ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.Text("Value:");ImGui.SameLine();ImGui.Text(formatMoney(weedTotal))
         ---------------------------------------Document Forgery------------------------------------------------------------
@@ -672,17 +672,17 @@ if tonumber(online_version:get_string()) == 3179 then
           saveToConfig("fdUpdgrade2", fdUpdgrade2)
         end
         if fdUpdgrade1 then
-          fdOffset1  = globals.get_int(262145 + 17634)
+          fdOffset1  = globals.get_int(262145 + 17325)
         else
           fdOffset1 = 0
         end
         if fdUpdgrade2 then
-          fdOffset2  = globals.get_int(262145 + 17640)
+          fdOffset2  = globals.get_int(262145 + 17331)
         else
           fdOffset2 = 0
         end
         local fdProduct = stats.get_int(MPx.."_PRODTOTALFORFACTORY4")
-        local fdTotal   = ((globals.get_int(262145 + 17628) + fdOffset1 + fdOffset2) * fdProduct)
+        local fdTotal   = ((globals.get_int(262145 + 17319) + fdOffset1 + fdOffset2) * fdProduct)
         ImGui.Text("Product:");ImGui.SameLine();ImGui.Dummy(5, 1);ImGui.SameLine();ImGui.ProgressBar((fdProduct/60), 160, 25, tostring(fdProduct).." Boxes ("..tostring(math.floor(fdProduct / 6 * 10)).."%)")
         ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.Text("Value:");ImGui.SameLine();ImGui.Text(formatMoney(fdTotal))
         ---------------------------------------Bunker-----------------------------------------------------------------------
@@ -696,17 +696,17 @@ if tonumber(online_version:get_string()) == 3179 then
           saveToConfig("bunkerUpdgrade2", bunkerUpdgrade2)
         end
         if bunkerUpdgrade1 then
-          bunkerOffset1  = globals.get_int(262145 + 21749)
+          bunkerOffset1  = globals.get_int(262145 + 21256)
         else
           bunkerOffset1 = 0
         end
         if bunkerUpdgrade2 then
-          bunkerOffset2  = globals.get_int(262145 + 21748)
+          bunkerOffset2  = globals.get_int(262145 + 21255)
         else
           bunkerOffset2 = 0
         end
         local bunkerProduct = stats.get_int(MPx.."_PRODTOTALFORFACTORY5")
-        local bunkerTotal   = ((globals.get_int(262145 + 21747) + bunkerOffset1 + bunkerOffset2) * bunkerProduct)
+        local bunkerTotal   = ((globals.get_int(262145 + 21254) + bunkerOffset1 + bunkerOffset2) * bunkerProduct)
         ImGui.Text("Product:");ImGui.SameLine();ImGui.Dummy(5, 1);ImGui.SameLine();ImGui.ProgressBar((bunkerProduct/100), 160, 25, tostring(bunkerProduct).." Crates ("..tostring(bunkerProduct).."%)")
         ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.Text("Value:");ImGui.SameLine();ImGui.Text("BC: "..formatMoney(bunkerTotal).."\nLS: "..formatMoney(math.floor(bunkerTotal * 1.5)))
         ---------------------------------------Acid Lab-------------------------------------------------------------------
@@ -716,21 +716,27 @@ if tonumber(online_version:get_string()) == 3179 then
           saveToConfig("acidUpdgrade", acidUpdgrade)
         end
         if acidUpdgrade then
-          acidOffset  = globals.get_int(262145 + 17639)
+          acidOffset  = globals.get_int(262145 + 17330)
         else
           acidOffset = 0
         end
         local acidProduct = stats.get_int(MPx.."_PRODTOTALFORFACTORY6")
-        local acidTotal   = ((globals.get_int(262145 + 17633) + acidOffset) * acidProduct)
+        local acidTotal   = ((globals.get_int(262145 + 17324) + acidOffset) * acidProduct)
         ImGui.Text("Product:");ImGui.SameLine();ImGui.Dummy(5, 1);ImGui.SameLine();ImGui.ProgressBar((acidProduct/100), 160, 25, tostring(acidProduct).." Sheets ("..tostring(math.floor(acidProduct / 16 * 10)).."%)")
         ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.Text("Value:");ImGui.SameLine();ImGui.Text(formatMoney(acidTotal))
         ImGui.Spacing();ImGui.Separator()
         local finalAmt = (hangarTotal + cashTotal + cokeTotal + methTotal + weedTotal + fdTotal + bunkerTotal + acidTotal)
         ImGui.Spacing();ImGui.Text("Total Profit = "..formatMoney(finalAmt))
+        if ImGui.IsItemHovered() and ImGui.IsItemClicked(0) then
+          script.run_in_fiber(function()
+            stats.set_int(MPx.."_CLUB_POPULARITY", 1000)
+            gui.show_message("YimResupplier", "Nightclub popularity increased.")
+          end)
+        end
         ImGui.EndTabItem()
       end
     else
-      ImGui.Text("YimResupplier doesn't work in Single Player.")
+      ImGui.Text("\n\nUnavailable in Single Player.\n\n")
     end
   end)
 elseif tonumber(online_version:get_string()) > 3179 then
