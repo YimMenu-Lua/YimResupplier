@@ -1,10 +1,11 @@
 ---@diagnostic disable: undefined-global, lowercase-global
 
---------------------------------------------------------------------------------------------
 --[[
-  RXI JSON Library (Modified by Harmless)
-  Credits: RXI (json.lua (https://github.com/rxi/json.lua) - for the original library)
-]]--
+  #### RXI JSON Library (Modified by [Harmless](https://github.com/harmless05)).
+
+  <u>Credits:</u> [RXI's json.lua](https://github.com/rxi/json.lua) for the original library.
+
+]]
 local function json()
   local json = { _version = "0.1.2" }
   --encode
@@ -329,6 +330,12 @@ local function json()
   return json
 end
 
+--[[ **Config System For Lua**
+
+  - Written by [Harmless](https://github.com/harmless05).
+
+  - Uses [RXI JSON Library](https://github.com/rxi/json.lua).
+]]
 local jsonConf = json()
 local function writeToFile(filename, data)
   local file, _ = io.open(filename, "w")
@@ -405,23 +412,39 @@ end
 -------------------------------------------------------------------------------
 
 online_version = memory.scan_pattern("8B C3 33 D2 C6 44 24 20"):add(0x24):rip()
-if tonumber(online_version:get_string()) == 3258 then
+if tonumber(online_version:get_string()) == 3274 then --3258
   yim_resupplier = gui.get_tab("YimResupplier")
   default_config = {
-       cashUpdgrade1   = false,
-       cashUpdgrade2   = false,
-       cokeUpdgrade1   = false,
-       cokeUpdgrade2   = false,
-       methUpdgrade1   = false,
-       methUpdgrade2   = false,
-       weedUpdgrade1   = false,
-       weedUpdgrade2   = false,
-       fdUpdgrade1     = false,
-       fdUpdgrade2     = false,
-       bunkerUpdgrade1 = false,
-       bunkerUpdgrade2 = false,
-       acidUpdgrade    = false,
+        cashUpdgrade1   = false,
+        cashUpdgrade2   = false,
+        cokeUpdgrade1   = false,
+        cokeUpdgrade2   = false,
+        methUpdgrade1   = false,
+        methUpdgrade2   = false,
+        weedUpdgrade1   = false,
+        weedUpdgrade2   = false,
+        fdUpdgrade1     = false,
+        fdUpdgrade2     = false,
+        bunkerUpdgrade1 = false,
+        bunkerUpdgrade2 = false,
+        acidUpdgrade    = false,
       }
+  local hangarOwned     = false
+  local fCashOwned      = false
+  local cokeOwned       = false
+  local methOwned       = false
+  local weedOwned       = false
+  local fdOwned         = false
+  local bunkerOwned     = false
+  local acidOwned       = false
+  local hangarTotal     = 0
+  local cashTotal       = 0
+  local cokeTotal       = 0
+  local methTotal       = 0
+  local weedTotal       = 0
+  local fdTotal         = 0
+  local bunkerTotal     = 0
+  local acidTotal       = 0
   local cashUpdgrade1   = readFromConfig("cashUpdgrade1")
   local cashUpdgrade2   = readFromConfig("cashUpdgrade2")
   local cokeUpdgrade1   = readFromConfig("cokeUpdgrade1")
@@ -435,9 +458,71 @@ if tonumber(online_version:get_string()) == 3258 then
   local bunkerUpdgrade1 = readFromConfig("bunkerUpdgrade1")
   local bunkerUpdgrade2 = readFromConfig("bunkerUpdgrade2")
   local acidUpdgrade    = readFromConfig("acidUpdgrade")
+  local function formatMoney(value)
+    return "$"..tostring(value):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
+  end
+  local function coloredText(text, wrap_size, color)
+    ImGui.PushStyleColor(ImGuiCol.Text, color[1]/255, color[2]/255, color[3]/255, color[4])
+    ImGui.PushTextWrapPos(ImGui.GetFontSize() * wrap_size)
+    ImGui.TextWrapped(text)
+    ImGui.PopTextWrapPos()
+    ImGui.PopStyleColor(1)
+  end
+  local function selfTP(keepVehicle, coords)
+    script.run_in_fiber(function(selftp)
+      STREAMING.REQUEST_COLLISION_AT_COORD(coords.x, coords.y, coords.z)
+      selftp:sleep(300)
+      if keepVehicle then
+        PED.SET_PED_COORDS_KEEP_VEHICLE(self.get_ped(), coords.x, coords.y, coords.z)
+      else
+        TASK.CLEAR_PED_TASKS_IMMEDIATELY(self.get_ped())
+        ENTITY.SET_ENTITY_COORDS(self.get_ped(), coords.x, coords.y, coords.z, false, false, true)
+      end
+    end)
+  end
   yim_resupplier:add_imgui(function()
     if NETWORK.NETWORK_IS_SESSION_STARTED() then
       local MPx = "MP"..stats.get_character_index()
+      if stats.get_int(MPx.."_PROP_HANGAR") ~= 0 then
+        hangarOwned = true
+      else
+        hangarOwned = false
+      end
+      if stats.get_int(MPx.."_PROP_FAC_SLOT0") ~= 0 then
+        fCashOwned = true
+      else
+        fCashOwned = false
+      end
+      if stats.get_int(MPx.."_PROP_FAC_SLOT1") ~= 0 then
+        cokeOwned = true
+      else
+        cokeOwned = false
+      end
+      if stats.get_int(MPx.."_PROP_FAC_SLOT2") ~= 0 then
+        methOwned = true
+      else
+        methOwned = false
+      end
+      if stats.get_int(MPx.."_PROP_FAC_SLOT3") ~= 0 then
+        weedOwned = true
+      else
+        weedOwned = false
+      end
+      if stats.get_int(MPx.."_PROP_FAC_SLOT4") ~= 0 then
+        fdOwned = true
+      else
+        fdOwned = false
+      end
+      if stats.get_int(MPx.."_PROP_FAC_SLOT5") ~= 0 then
+        bunkerOwned = true
+      else
+        bunkerOwned = false
+      end
+      if stats.get_int(MPx.."_PROP_FAC_SLOT6") ~= 0 then
+        acidOwned = true
+      else
+        acidOwned = false
+      end
       ImGui.BeginTabBar("YimResupplier", ImGuiTabBarFlags.None)
       if ImGui.BeginTabItem("Manage Supplies") then
         local hangarSupply = stats.get_int(MPx.."_HANGAR_CONTRABAND_TOTAL")
@@ -448,8 +533,8 @@ if tonumber(online_version:get_string()) == 3258 then
         local dfSupply     = stats.get_int(MPx.."_MATTOTALFORFACTORY4")
         local bunkerSupply = stats.get_int(MPx.."_MATTOTALFORFACTORY5")
         local acidSupply   = stats.get_int(MPx.."_MATTOTALFORFACTORY6")
-        ImGui.Text("Hangar Cargo");ImGui.Separator()
-        -- if stats.get_int(MPx.."_HANGAR_OWNED") ~= 0 then
+        ImGui.Spacing();ImGui.Text("Hangar Cargo");ImGui.Separator()
+        if hangarOwned then
           ImGui.Text("Current Supplies:");ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.ProgressBar((hangarSupply/50), 140, 30)
           if hangarSupply < 50 then
             if ImGui.Button("Source Random Crate(s)") then
@@ -472,277 +557,503 @@ if tonumber(online_version:get_string()) == 3258 then
               hangarLoop = false
             end
           end
-        -- else
-        --   ImGui.Text("You don't own a Hangar.")
-        -- end
+          if INTERIOR.GET_INTERIOR_FROM_ENTITY(self.get_ped()) == 0 then
+            if ImGui.Button("Teleport##hangar") then
+              script.run_in_fiber(function()
+                local hangarBlip = HUD.GET_FIRST_BLIP_INFO_ID(569)
+                local hangarLoc
+                if HUD.DOES_BLIP_EXIST(hangarBlip) then
+                  hangarLoc = HUD.GET_BLIP_COORDS(hangarBlip)
+                  selfTP(true, hangarLoc)
+                end
+              end)
+            end
+          end
+        else
+          ImGui.Text("You don't own a Hangar.")
+        end
         ImGui.Spacing();ImGui.Text("MC Supplies");ImGui.Separator()
-        -- if stats.get_int(MPx.."_FACTORYSLOT0") ~= 0 then
+        if fCashOwned then
           ImGui.Text("Fake Cash:");ImGui.SameLine();ImGui.Dummy(55, 1);ImGui.SameLine();ImGui.ProgressBar((cashSupply/100), 140, 30)
           if math.ceil(cashSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##FakeCash") then
-              globals.set_int(1663174 + 0 + 1, 1) -- 1662873 -> 1663174
+              globals.set_int(1663174 + 0 + 1, 1)
+            end
+            ImGui.SameLine();ImGui.Dummy(5, 1)
+          end
+          if INTERIOR.GET_INTERIOR_FROM_ENTITY(self.get_ped()) == 0 then
+            ImGui.SameLine()
+            if ImGui.Button("Teleport##fc") then
+              script.run_in_fiber(function()
+                local fcBlip = HUD.GET_FIRST_BLIP_INFO_ID(500)
+                local fcLoc
+                if HUD.DOES_BLIP_EXIST(fcBlip) then
+                  fcLoc = HUD.GET_BLIP_COORDS(fcBlip)
+                  selfTP(false, fcLoc)
+                end
+              end)
             end
           end
-        -- else
-        --   ImGui.Text("You don't own a Fake Cash business.")
-        -- end
-        -- if stats.get_int(MPx.."_FACTORYSLOT1") ~= 0 then
+        else
+          ImGui.Text("You don't own a Fake Cash business.")
+        end
+        if cokeOwned then
           ImGui.Text("Cocaine:");ImGui.SameLine();ImGui.Dummy(73, 1);ImGui.SameLine();ImGui.ProgressBar((cokeSupply/100), 140, 30)
           if math.ceil(cokeSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##Cocaine") then
               globals.set_int(1663174 + 1 + 1, 1)
             end
+            ImGui.SameLine();ImGui.Dummy(5, 1)
           end
-        -- else
-        --   ImGui.Text("You don't own a Cocaine business.")
-        -- end
-        -- if stats.get_int(MPx.."_FACTORYSLOT2") ~= 0 then
+          if INTERIOR.GET_INTERIOR_FROM_ENTITY(self.get_ped()) == 0 then
+            ImGui.SameLine()
+            if ImGui.Button("Teleport##coke") then
+              script.run_in_fiber(function()
+                local cokeBlip = HUD.GET_FIRST_BLIP_INFO_ID(497)
+                local cokeLoc
+                if HUD.DOES_BLIP_EXIST(cokeBlip) then
+                  cokeLoc = HUD.GET_BLIP_COORDS(cokeBlip)
+                  selfTP(false, cokeLoc)
+                end
+              end)
+            end
+          end
+        else
+          ImGui.Text("You don't own a Cocaine business.")
+        end
+        if methOwned then
           ImGui.Text("Meth:");ImGui.SameLine();ImGui.Dummy(95, 1);ImGui.SameLine();ImGui.ProgressBar((methSupply/100), 140, 30)
           if math.ceil(methSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##Meth") then
               globals.set_int(1663174 + 2 + 1, 1)
             end
+            ImGui.SameLine();ImGui.Dummy(5, 1)
           end
-        -- else
-        --   ImGui.Text("You don't own a Meth business.")
-        -- end
-        -- if stats.get_int(MPx.."_FACTORYSLOT3") ~= 0 then
+          if INTERIOR.GET_INTERIOR_FROM_ENTITY(self.get_ped()) == 0 then
+            ImGui.SameLine()
+            if ImGui.Button("Teleport##meth") then
+              script.run_in_fiber(function()
+                local methBlip = HUD.GET_FIRST_BLIP_INFO_ID(499)
+                local methLoc
+                if HUD.DOES_BLIP_EXIST(methBlip) then
+                  methLoc = HUD.GET_BLIP_COORDS(methBlip)
+                  selfTP(false, methLoc)
+                end
+              end)
+            end
+          end
+        else
+          ImGui.Text("You don't own a Meth business.")
+        end
+        if weedOwned then
           ImGui.Text("Weed:");ImGui.SameLine();ImGui.Dummy(90, 1);ImGui.SameLine();ImGui.ProgressBar((weedSupply/100), 140, 30)
           if math.ceil(weedSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##Weed") then
               globals.set_int(1663174 + 3 + 1, 1)
             end
+            ImGui.SameLine();ImGui.Dummy(5, 1)
           end
-        -- else
-        --   ImGui.Text("You don't own a Weed business.")
-        -- end
-        -- if stats.get_int(MPx.."_FACTORYSLOT4") ~= 0 then
+          if INTERIOR.GET_INTERIOR_FROM_ENTITY(self.get_ped()) == 0 then
+            ImGui.SameLine()
+            if ImGui.Button("Teleport##weed") then
+              script.run_in_fiber(function()
+                local weedBlip = HUD.GET_FIRST_BLIP_INFO_ID(496)
+                local weedLoc
+                if HUD.DOES_BLIP_EXIST(weedBlip) then
+                  weedLoc = HUD.GET_BLIP_COORDS(weedBlip)
+                  selfTP(false, weedLoc)
+                end
+              end)
+            end
+          end
+        else
+          ImGui.Text("You don't own a Weed business.")
+        end
+        if fdOwned then
           ImGui.Text("Document Forgery: ");ImGui.SameLine();ImGui.ProgressBar((dfSupply/100), 140, 30)
           if math.ceil(dfSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##DocumentForgery") then
               globals.set_int(1663174 + 4 + 1, 1)
             end
+            ImGui.SameLine();ImGui.Dummy(5, 1)
           end
-        -- else
-        --   ImGui.Text("You don't own a Document Forgery office.")
-        -- end
-        -- if stats.get_int(MPx.."_FACTORYSLOT5") ~= 0 then
+          if INTERIOR.GET_INTERIOR_FROM_ENTITY(self.get_ped()) == 0 then
+            ImGui.SameLine()
+            if ImGui.Button("Teleport##fd") then
+              script.run_in_fiber(function()
+                local fdBlip = HUD.GET_FIRST_BLIP_INFO_ID(498)
+                local fdLoc
+                if HUD.DOES_BLIP_EXIST(fdBlip) then
+                  fdLoc = HUD.GET_BLIP_COORDS(fdBlip)
+                  selfTP(false, fdLoc)
+                end
+              end)
+            end
+          end
+        else
+          ImGui.Text("You don't own a Document Forgery office.")
+        end
+        if bunkerOwned then
           ImGui.Text("Bunker:");ImGui.SameLine();ImGui.Dummy(80, 1);ImGui.SameLine();ImGui.ProgressBar((bunkerSupply/100), 140, 30)
           if math.ceil(bunkerSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##Bunker") then
               globals.set_int(1663174 + 5 + 1, 1)
             end
+            ImGui.SameLine();ImGui.Dummy(5, 1)
           end
-        -- else
-        --   ImGui.Text("You don't own a Bunker.")
-        -- end
-        -- if stats.get_int(MPx.."_MP_STAT_XM22_LAB_OWNED_v0") ~= 0 then
+          if INTERIOR.GET_INTERIOR_FROM_ENTITY(self.get_ped()) == 0 then
+            ImGui.SameLine()
+            if ImGui.Button("Teleport##bunker") then
+              script.run_in_fiber(function()
+                local bunkerBlip = HUD.GET_FIRST_BLIP_INFO_ID(557)
+                local bunkerLoc
+                if HUD.DOES_BLIP_EXIST(bunkerBlip) then
+                  bunkerLoc = HUD.GET_BLIP_COORDS(bunkerBlip)
+                  selfTP(true, bunkerLoc)
+                end
+              end)
+            end
+          end
+        else
+          ImGui.Text("You don't own a Bunker.")
+        end
+        if acidOwned then
           ImGui.Text("Acid Lab:");ImGui.SameLine();ImGui.Dummy(70, 1);ImGui.SameLine();ImGui.ProgressBar((acidSupply/100), 140, 30)
           if math.ceil(acidSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##AcidLab") then
               globals.set_int(1663174 + 6 + 1, 1)
             end
+            ImGui.SameLine();ImGui.Dummy(5, 1)
           end
-        -- else
-        --   ImGui.Text("You don't own an Acid Lab.")
-        -- end
+          if INTERIOR.GET_INTERIOR_FROM_ENTITY(self.get_ped()) == 0 then
+            ImGui.SameLine()
+            if ImGui.Button("Teleport##acid") then
+              script.run_in_fiber(function()
+                local acidBlip = HUD.GET_FIRST_BLIP_INFO_ID(848)
+                local acidLoc
+                if HUD.DOES_BLIP_EXIST(acidBlip) then
+                  acidLoc = HUD.GET_BLIP_COORDS(acidBlip)
+                  selfTP(true, acidLoc)
+                end
+              end)
+            end
+          end
+          ImGui.Dummy(1, 10);coloredText("WARNING!\10Teleport buttons might be broken in public sessions.", 40, {255, 204, 0, 0.8})
+        else
+          ImGui.Text("You don't own an Acid Lab.")
+        end
         ImGui.EndTabItem()
       end
       if ImGui.BeginTabItem("Production Overview") then
-        local function formatMoney(value)
-          return "$"..tostring(value):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
+        ---------------------------------------Hangar----------------------------------------------------------------------
+        if hangarOwned then
+          ImGui.Text("Hangar:")
+          local hangarCargo = stats.get_int(MPx.."_HANGAR_CONTRABAND_TOTAL")
+          hangarTotal = hangarCargo * 30000
+          ImGui.Text("Product:");ImGui.SameLine();ImGui.Dummy(5, 1);ImGui.SameLine();ImGui.ProgressBar((hangarCargo/50), 160, 25, tostring(hangarCargo).." Crates ("..tostring(math.floor(hangarCargo / 0.5)).."%)")
+          ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.Text("Value:");ImGui.SameLine()ImGui.Text(formatMoney(hangarTotal))
         end
-
-        ImGui.Text("Hangar:")
-        local hangarCargo = stats.get_int(MPx.."_HANGAR_CONTRABAND_TOTAL")
-        local hangarTotal = hangarCargo * 30000
-        ImGui.Text("Product:");ImGui.SameLine();ImGui.Dummy(5, 1);ImGui.SameLine();ImGui.ProgressBar((hangarCargo/50), 160, 25, tostring(hangarCargo).." Crates ("..tostring(math.floor(hangarCargo / 0.5)).."%)")
-        ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.Text("Value:");ImGui.SameLine()ImGui.Text(formatMoney(hangarTotal))
         ---------------------------------------Fake Cash-------------------------------------------------------------------
-        ImGui.Separator()ImGui.Text("Fake Cash:");ImGui.SameLine()
-        cashUpdgrade1, used = ImGui.Checkbox("Equipment Upgrade##cash", cashUpdgrade1, true);ImGui.SameLine()
-        if used then
-          saveToConfig("cashUpdgrade1", cashUpdgrade1)
+        if fCashOwned then
+          ImGui.Separator()ImGui.Text("Fake Cash:");ImGui.SameLine()
+          cashUpdgrade1, used = ImGui.Checkbox("Equipment Upgrade##cash", cashUpdgrade1, true);ImGui.SameLine()
+          if used then
+            saveToConfig("cashUpdgrade1", cashUpdgrade1)
+          end
+          cashUpdgrade2, used = ImGui.Checkbox("Staff Upgrade##cash", cashUpdgrade2, true)
+          if used then
+            saveToConfig("cashUpdgrade2", cashUpdgrade2)
+          end
+          if cashUpdgrade1 then
+            cashOffset1  = globals.get_int(262145 + 17326)
+          else
+            cashOffset1 = 0
+          end
+          if cashUpdgrade2 then
+            cashOffset2  = globals.get_int(262145 + 17332)
+          else
+            cashOffset2 = 0
+          end
+          local cashProduct = stats.get_int(MPx.."_PRODTOTALFORFACTORY0")
+          cashTotal = ((globals.get_int(262145 + 17320) + cashOffset1 + cashOffset2) * cashProduct)
+          ImGui.Text("Product:");ImGui.SameLine();ImGui.Dummy(5, 1);ImGui.SameLine();ImGui.ProgressBar((cashProduct/40), 160, 25, tostring(cashProduct).." Boxes ("..tostring(math.floor(cashProduct * 2.5)).."%)")
+          ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.Text("Value:");ImGui.SameLine()ImGui.Text(formatMoney(cashTotal))
         end
-        cashUpdgrade2, used = ImGui.Checkbox("Staff Upgrade##cash", cashUpdgrade2, true)
-        if used then
-          saveToConfig("cashUpdgrade2", cashUpdgrade2)
-        end
-        if cashUpdgrade1 then
-          cashOffset1  = globals.get_int(262145 + 17326)
-        else
-          cashOffset1 = 0
-        end
-        if cashUpdgrade2 then
-          cashOffset2  = globals.get_int(262145 + 17332)
-        else
-          cashOffset2 = 0
-        end
-        local cashProduct = stats.get_int(MPx.."_PRODTOTALFORFACTORY0")
-        local cashTotal   = ((globals.get_int(262145 + 17320) + cashOffset1 + cashOffset2) * cashProduct)
-        ImGui.Text("Product:");ImGui.SameLine();ImGui.Dummy(5, 1);ImGui.SameLine();ImGui.ProgressBar((cashProduct/40), 160, 25, tostring(cashProduct).." Boxes ("..tostring(math.floor(cashProduct * 2.5)).."%)")
-        ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.Text("Value:");ImGui.SameLine()ImGui.Text(formatMoney(cashTotal))
         ---------------------------------------Coke----------------------------------------------------------------------
-        ImGui.Separator();ImGui.Text("Cocaine:    ");ImGui.SameLine()
-        cokeUpdgrade1, used = ImGui.Checkbox("Equipment Upgrade##coke", cokeUpdgrade1, true);ImGui.SameLine()
-        if used then
-          saveToConfig("cokeUpdgrade1", cokeUpdgrade1)
+        if cokeOwned then
+          ImGui.Separator();ImGui.Text("Cocaine:    ");ImGui.SameLine()
+          cokeUpdgrade1, used = ImGui.Checkbox("Equipment Upgrade##coke", cokeUpdgrade1, true);ImGui.SameLine()
+          if used then
+            saveToConfig("cokeUpdgrade1", cokeUpdgrade1)
+          end
+          cokeUpdgrade2, used = ImGui.Checkbox("Staff Upgrade##coke", cokeUpdgrade2, true)
+          if used then
+            saveToConfig("cokeUpdgrade2", cokeUpdgrade2)
+          end
+          if cokeUpdgrade1 then
+            cokeOffset1  = globals.get_int(262145 + 17327)
+          else
+            cokeOffset1 = 0
+          end
+          if cokeUpdgrade2 then
+            cokeOffset2  = globals.get_int(262145 + 17333)
+          else
+            cokeOffset2 = 0
+          end
+          local cokeProduct = stats.get_int(MPx.."_PRODTOTALFORFACTORY1")
+          cokeTotal = ((globals.get_int(262145 + 17321) + cokeOffset1 + cokeOffset2) * cokeProduct)
+          ImGui.Text("Product:");ImGui.SameLine();ImGui.Dummy(5, 1);ImGui.SameLine();ImGui.ProgressBar((cokeProduct/10), 160, 25, tostring(cokeProduct).." Kilos ("..tostring(cokeProduct * 10).."%)")
+          ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.Text("Value:")ImGui.SameLine();ImGui.Text(formatMoney(cokeTotal))
         end
-        cokeUpdgrade2, used = ImGui.Checkbox("Staff Upgrade##coke", cokeUpdgrade2, true)
-        if used then
-          saveToConfig("cokeUpdgrade2", cokeUpdgrade2)
-        end
-        if cokeUpdgrade1 then
-          cokeOffset1  = globals.get_int(262145 + 17327)
-        else
-          cokeOffset1 = 0
-        end
-        if cokeUpdgrade2 then
-          cokeOffset2  = globals.get_int(262145 + 17333)
-        else
-          cokeOffset2 = 0
-        end
-        local cokeProduct = stats.get_int(MPx.."_PRODTOTALFORFACTORY1")
-        local cokeTotal   = ((globals.get_int(262145 + 17321) + cokeOffset1 + cokeOffset2) * cokeProduct)
-        ImGui.Text("Product:");ImGui.SameLine();ImGui.Dummy(5, 1);ImGui.SameLine();ImGui.ProgressBar((cokeProduct/10), 160, 25, tostring(cokeProduct).." Kilos ("..tostring(cokeProduct * 10).."%)")
-        ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.Text("Value:")ImGui.SameLine();ImGui.Text(formatMoney(cokeTotal))
         ---------------------------------------Meth-----------------------------------------------------------------------
-        ImGui.Separator()ImGui.Text("Meth:        ");ImGui.SameLine()
-        methUpdgrade1, used = ImGui.Checkbox("Equipment Upgrade##meth", methUpdgrade1, true);ImGui.SameLine()
-        if used then
-          saveToConfig("methUpdgrade1", methUpdgrade1)
+        if methOwned then
+          ImGui.Separator()ImGui.Text("Meth:        ");ImGui.SameLine()
+          methUpdgrade1, used = ImGui.Checkbox("Equipment Upgrade##meth", methUpdgrade1, true);ImGui.SameLine()
+          if used then
+            saveToConfig("methUpdgrade1", methUpdgrade1)
+          end
+          methUpdgrade2, used = ImGui.Checkbox("Staff Upgrade##meth", methUpdgrade2, true)
+          if used then
+            saveToConfig("methUpdgrade2", methUpdgrade2)
+          end
+          if methUpdgrade1 then
+            methOffset1  = globals.get_int(262145 + 17328)
+          else
+            methOffset1 = 0
+          end
+          if methUpdgrade2 then
+            methOffset2  = globals.get_int(262145 + 17334)
+          else
+            methOffset2 = 0
+          end
+          local methProduct = stats.get_int(MPx.."_PRODTOTALFORFACTORY2")
+          methTotal = ((globals.get_int(262145 + 17322)+ methOffset1 + methOffset2) * methProduct)
+          ImGui.Text("Product:");ImGui.SameLine();ImGui.Dummy(5, 1);ImGui.SameLine();ImGui.ProgressBar((methProduct/20), 160, 25, tostring(methProduct).." Pounds ("..tostring(methProduct * 5).."%)")
+          ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.Text("Value:");ImGui.SameLine()ImGui.Text(formatMoney(methTotal))
         end
-        methUpdgrade2, used = ImGui.Checkbox("Staff Upgrade##meth", methUpdgrade2, true)
-        if used then
-          saveToConfig("methUpdgrade2", methUpdgrade2)
-        end
-        if methUpdgrade1 then
-          methOffset1  = globals.get_int(262145 + 17328)
-        else
-          methOffset1 = 0
-        end
-        if methUpdgrade2 then
-          methOffset2  = globals.get_int(262145 + 17334)
-        else
-          methOffset2 = 0
-        end
-        local methProduct = stats.get_int(MPx.."_PRODTOTALFORFACTORY2")
-        local methTotal   = ((globals.get_int(262145 + 17322)+ methOffset1 + methOffset2) * methProduct)
-        ImGui.Text("Product:");ImGui.SameLine();ImGui.Dummy(5, 1);ImGui.SameLine();ImGui.ProgressBar((methProduct/20), 160, 25, tostring(methProduct).." Pounds ("..tostring(methProduct * 5).."%)")
-        ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.Text("Value:");ImGui.SameLine()ImGui.Text(formatMoney(methTotal))
         ---------------------------------------Weed------------------------------------------------------------------------
-        ImGui.Separator()ImGui.Text("Weed:       ");ImGui.SameLine()
-        weedUpdgrade1, used = ImGui.Checkbox("Equipment Upgrade##weed", weedUpdgrade1, true);ImGui.SameLine()
-        if used then
-          saveToConfig("weedUpdgrade1", weedUpdgrade1)
+        if weedOwned then
+          ImGui.Separator()ImGui.Text("Weed:       ");ImGui.SameLine()
+          weedUpdgrade1, used = ImGui.Checkbox("Equipment Upgrade##weed", weedUpdgrade1, true);ImGui.SameLine()
+          if used then
+            saveToConfig("weedUpdgrade1", weedUpdgrade1)
+          end
+          weedUpdgrade2, used = ImGui.Checkbox("Staff Upgrade##weed", weedUpdgrade2, true)
+          if used then
+            saveToConfig("weedUpdgrade2", weedUpdgrade2)
+          end
+          if weedUpdgrade1 then
+            weedOffset1  = globals.get_int(262145 + 17329)
+          else
+            weedOffset1 = 0
+          end
+          if weedUpdgrade2 then
+            weedOffset2  = globals.get_int(262145 + 17335)
+          else
+            weedOffset2 = 0
+          end
+          local weedProduct = stats.get_int(MPx.."_PRODTOTALFORFACTORY3")
+          weedTotal = ((globals.get_int(262145 + 17323) + weedOffset1 + weedOffset2) * weedProduct)
+          ImGui.Text("Product:");ImGui.SameLine();ImGui.Dummy(5, 1);ImGui.SameLine();ImGui.ProgressBar((weedProduct/80), 160, 25, tostring(weedProduct).." Pounds ("..tostring(math.floor(weedProduct / 8 * 10)).."%)")
+          ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.Text("Value:");ImGui.SameLine();ImGui.Text(formatMoney(weedTotal))
         end
-        weedUpdgrade2, used = ImGui.Checkbox("Staff Upgrade##weed", weedUpdgrade2, true)
-        if used then
-          saveToConfig("weedUpdgrade2", weedUpdgrade2)
-        end
-        if weedUpdgrade1 then
-          weedOffset1  = globals.get_int(262145 + 17329)
-        else
-          weedOffset1 = 0
-        end
-        if weedUpdgrade2 then
-          weedOffset2  = globals.get_int(262145 + 17335)
-        else
-          weedOffset2 = 0
-        end
-        local weedProduct = stats.get_int(MPx.."_PRODTOTALFORFACTORY3")
-        local weedTotal   = ((globals.get_int(262145 + 17323) + weedOffset1 + weedOffset2) * weedProduct)
-        ImGui.Text("Product:");ImGui.SameLine();ImGui.Dummy(5, 1);ImGui.SameLine();ImGui.ProgressBar((weedProduct/80), 160, 25, tostring(weedProduct).." Pounds ("..tostring(math.floor(weedProduct / 8 * 10)).."%)")
-        ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.Text("Value:");ImGui.SameLine();ImGui.Text(formatMoney(weedTotal))
         ---------------------------------------Document Forgery------------------------------------------------------------
-        ImGui.Separator()ImGui.Text("Fake ID:    ");ImGui.SameLine()
-        fdUpdgrade1, used = ImGui.Checkbox("Equipment Upgrade##fd", fdUpdgrade1, true);ImGui.SameLine()
-        if used then
-          saveToConfig("fdUpdgrade1", fdUpdgrade1)
+        if fdOwned then
+          ImGui.Separator()ImGui.Text("Fake ID:    ");ImGui.SameLine()
+          fdUpdgrade1, used = ImGui.Checkbox("Equipment Upgrade##fd", fdUpdgrade1, true);ImGui.SameLine()
+          if used then
+            saveToConfig("fdUpdgrade1", fdUpdgrade1)
+          end
+          fdUpdgrade2, used = ImGui.Checkbox("Staff Upgrade##fd", fdUpdgrade2, true)
+          if used then
+            saveToConfig("fdUpdgrade2", fdUpdgrade2)
+          end
+          if fdUpdgrade1 then
+            fdOffset1  = globals.get_int(262145 + 17325)
+          else
+            fdOffset1 = 0
+          end
+          if fdUpdgrade2 then
+            fdOffset2  = globals.get_int(262145 + 17331)
+          else
+            fdOffset2 = 0
+          end
+          local fdProduct = stats.get_int(MPx.."_PRODTOTALFORFACTORY4")
+          fdTotal = ((globals.get_int(262145 + 17319) + fdOffset1 + fdOffset2) * fdProduct)
+          ImGui.Text("Product:");ImGui.SameLine();ImGui.Dummy(5, 1);ImGui.SameLine();ImGui.ProgressBar((fdProduct/60), 160, 25, tostring(fdProduct).." Boxes ("..tostring(math.floor(fdProduct / 6 * 10)).."%)")
+          ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.Text("Value:");ImGui.SameLine();ImGui.Text(formatMoney(fdTotal))
         end
-        fdUpdgrade2, used = ImGui.Checkbox("Staff Upgrade##fd", fdUpdgrade2, true)
-        if used then
-          saveToConfig("fdUpdgrade2", fdUpdgrade2)
-        end
-        if fdUpdgrade1 then
-          fdOffset1  = globals.get_int(262145 + 17325)
-        else
-          fdOffset1 = 0
-        end
-        if fdUpdgrade2 then
-          fdOffset2  = globals.get_int(262145 + 17331)
-        else
-          fdOffset2 = 0
-        end
-        local fdProduct = stats.get_int(MPx.."_PRODTOTALFORFACTORY4")
-        local fdTotal   = ((globals.get_int(262145 + 17319) + fdOffset1 + fdOffset2) * fdProduct)
-        ImGui.Text("Product:");ImGui.SameLine();ImGui.Dummy(5, 1);ImGui.SameLine();ImGui.ProgressBar((fdProduct/60), 160, 25, tostring(fdProduct).." Boxes ("..tostring(math.floor(fdProduct / 6 * 10)).."%)")
-        ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.Text("Value:");ImGui.SameLine();ImGui.Text(formatMoney(fdTotal))
         ---------------------------------------Bunker-----------------------------------------------------------------------
-        ImGui.Separator();ImGui.Text("Bunker:     ");ImGui.SameLine()
-        bunkerUpdgrade1, used = ImGui.Checkbox("Equipment Upgrade##bunker", bunkerUpdgrade1, true);ImGui.SameLine()
-        if used then
-          saveToConfig("bunkerUpdgrade1", bunkerUpdgrade1)
+        if bunkerOwned then
+          ImGui.Separator();ImGui.Text("Bunker:     ");ImGui.SameLine()
+          bunkerUpdgrade1, used = ImGui.Checkbox("Equipment Upgrade##bunker", bunkerUpdgrade1, true);ImGui.SameLine()
+          if used then
+            saveToConfig("bunkerUpdgrade1", bunkerUpdgrade1)
+          end
+          bunkerUpdgrade2, used = ImGui.Checkbox("Staff Upgrade##bunker", bunkerUpdgrade2, true)
+          if used then
+            saveToConfig("bunkerUpdgrade2", bunkerUpdgrade2)
+          end
+          if bunkerUpdgrade1 then
+            bunkerOffset1  = globals.get_int(262145 + 21256)
+          else
+            bunkerOffset1 = 0
+          end
+          if bunkerUpdgrade2 then
+            bunkerOffset2  = globals.get_int(262145 + 21255)
+          else
+            bunkerOffset2 = 0
+          end
+          local bunkerProduct = stats.get_int(MPx.."_PRODTOTALFORFACTORY5")
+          bunkerTotal = ((globals.get_int(262145 + 21254) + bunkerOffset1 + bunkerOffset2) * bunkerProduct)
+          ImGui.Text("Product:");ImGui.SameLine();ImGui.Dummy(5, 1);ImGui.SameLine();ImGui.ProgressBar((bunkerProduct/100), 160, 25, tostring(bunkerProduct).." Crates ("..tostring(bunkerProduct).."%)")
+          ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.Text("Value:");ImGui.SameLine();ImGui.Text("BC: "..formatMoney(bunkerTotal).."\nLS: "..formatMoney(math.floor(bunkerTotal * 1.5)))
         end
-        bunkerUpdgrade2, used = ImGui.Checkbox("Staff Upgrade##bunker", bunkerUpdgrade2, true)
-        if used then
-          saveToConfig("bunkerUpdgrade2", bunkerUpdgrade2)
-        end
-        if bunkerUpdgrade1 then
-          bunkerOffset1  = globals.get_int(262145 + 21256)
-        else
-          bunkerOffset1 = 0
-        end
-        if bunkerUpdgrade2 then
-          bunkerOffset2  = globals.get_int(262145 + 21255)
-        else
-          bunkerOffset2 = 0
-        end
-        local bunkerProduct = stats.get_int(MPx.."_PRODTOTALFORFACTORY5")
-        local bunkerTotal   = ((globals.get_int(262145 + 21254) + bunkerOffset1 + bunkerOffset2) * bunkerProduct)
-        ImGui.Text("Product:");ImGui.SameLine();ImGui.Dummy(5, 1);ImGui.SameLine();ImGui.ProgressBar((bunkerProduct/100), 160, 25, tostring(bunkerProduct).." Crates ("..tostring(bunkerProduct).."%)")
-        ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.Text("Value:");ImGui.SameLine();ImGui.Text("BC: "..formatMoney(bunkerTotal).."\nLS: "..formatMoney(math.floor(bunkerTotal * 1.5)))
         ---------------------------------------Acid Lab-------------------------------------------------------------------
-        ImGui.Separator();ImGui.Text("Acid Lab:   ");ImGui.SameLine()
-        acidUpdgrade, used = ImGui.Checkbox("Equipment Upgrade##acid", acidUpdgrade, true)
-        if used then
-          saveToConfig("acidUpdgrade", acidUpdgrade)
+        if acidOwned then
+          ImGui.Separator();ImGui.Text("Acid Lab:   ");ImGui.SameLine()
+          acidUpdgrade, used = ImGui.Checkbox("Equipment Upgrade##acid", acidUpdgrade, true)
+          if used then
+            saveToConfig("acidUpdgrade", acidUpdgrade)
+          end
+          if acidUpdgrade then
+            acidOffset  = globals.get_int(262145 + 17330)
+          else
+            acidOffset = 0
+          end
+          local acidProduct = stats.get_int(MPx.."_PRODTOTALFORFACTORY6")
+          acidTotal = ((globals.get_int(262145 + 17324) + acidOffset) * acidProduct)
+          ImGui.Text("Product:");ImGui.SameLine();ImGui.Dummy(5, 1);ImGui.SameLine();ImGui.ProgressBar((acidProduct/100), 160, 25, tostring(acidProduct).." Sheets ("..tostring(math.floor(acidProduct / 16 * 10)).."%)")
+          ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.Text("Value:");ImGui.SameLine();ImGui.Text(formatMoney(acidTotal))
         end
-        if acidUpdgrade then
-          acidOffset  = globals.get_int(262145 + 17330)
-        else
-          acidOffset = 0
-        end
-        local acidProduct = stats.get_int(MPx.."_PRODTOTALFORFACTORY6")
-        local acidTotal   = ((globals.get_int(262145 + 17324) + acidOffset) * acidProduct)
-        ImGui.Text("Product:");ImGui.SameLine();ImGui.Dummy(5, 1);ImGui.SameLine();ImGui.ProgressBar((acidProduct/100), 160, 25, tostring(acidProduct).." Sheets ("..tostring(math.floor(acidProduct / 16 * 10)).."%)")
-        ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.Text("Value:");ImGui.SameLine();ImGui.Text(formatMoney(acidTotal))
         ImGui.Spacing();ImGui.Separator()
         local finalAmt = (hangarTotal + cashTotal + cokeTotal + methTotal + weedTotal + fdTotal + bunkerTotal + acidTotal)
         ImGui.Spacing();ImGui.Text("Total Profit = "..formatMoney(finalAmt))
-        if ImGui.IsItemHovered() and ImGui.IsItemClicked(0) then
-          script.run_in_fiber(function()
-            stats.set_int(MPx.."_CLUB_POPULARITY", 1000)
-            gui.show_message("YimResupplier", "Nightclub popularity increased.")
-          end)
+        ImGui.EndTabItem()
+      end
+      if ImGui.BeginTabItem("Business Safes") then
+        ImGui.Spacing();coloredText("This is still a work in progress so not all safes are available and not all functionalities are implemented.\10R* added the ability to collect income from all your safes using a mobile app but they locked it behind a paywall (only available for GTA+ members). Therefore, I'm still looking for a way to do replicate it here but hopefully there will be buttons allowing you to collect your income.", 23.5, {255,99,71, 0.8})ImGui.Spacing()
+        if stats.get_int(MPx.."_PROP_NIGHTCLUB") ~= 0 then
+          ImGui.Spacing();ImGui.Spacing();ImGui.Text("¤ Nightclub ¤")
+          if INTERIOR.GET_INTERIOR_FROM_ENTITY(self.get_ped()) == 0 then
+            ImGui.SameLine();ImGui.Dummy(50, 1); ImGui.SameLine()
+            if ImGui.Button("Teleport##nc") then
+              script.run_in_fiber(function()
+                local ncBlip = HUD.GET_FIRST_BLIP_INFO_ID(614)
+                local ncLoc
+                if HUD.DOES_BLIP_EXIST(ncBlip) then
+                  ncLoc = HUD.GET_BLIP_COORDS(ncBlip)
+                  selfTP(false, ncLoc)
+                end
+              end)
+            end
+          end
+          local currentNcPop = stats.get_int(MPx.."_CLUB_POPULARITY")
+          local popDiff = 1000 - currentNcPop
+          local currNcSafeMoney = stats.get_int(MPx.."_CLUB_SAFE_CASH_VALUE")
+          ImGui.Text("Popularity: ");ImGui.SameLine();ImGui.Dummy(35, 1);ImGui.SameLine();ImGui.ProgressBar(currentNcPop/1000, 160, 25, tostring(currentNcPop))
+          if currentNcPop < 1000 then
+            ImGui.SameLine()
+            if ImGui.Button("Max Popularity") then
+              stats.set_int(MPx.."_CLUB_POPULARITY", currentNcPop + popDiff)
+              gui.show_success("YimResupplier", "Nightclub popularity increased.")
+            end
+          end
+          ImGui.Text("Safe: ");ImGui.SameLine();ImGui.Dummy(75, 1);ImGui.SameLine();ImGui.ProgressBar(currNcSafeMoney/250000, 160, 25, formatMoney(currNcSafeMoney));ImGui.Separator()
         end
+        if stats.get_int(MPx.."_PROP_ARCADE") ~= 0 then
+          ImGui.Spacing();ImGui.Spacing();ImGui.Text("¤ Arcade ¤")
+          if INTERIOR.GET_INTERIOR_FROM_ENTITY(self.get_ped()) == 0 then
+            ImGui.SameLine();ImGui.Dummy(60, 1); ImGui.SameLine()
+            if ImGui.Button("Teleport##arcade") then
+              script.run_in_fiber(function()
+                local arBlip = HUD.GET_FIRST_BLIP_INFO_ID(740)
+                local arLoc
+                if HUD.DOES_BLIP_EXIST(arBlip) then
+                  arLoc = HUD.GET_BLIP_COORDS(arBlip)
+                  selfTP(false, arLoc)
+                end
+              end)
+            end
+          end
+          local currArSafeMoney = stats.get_int(MPx.."_ARCADE_SAFE_CASH_VALUE")
+          ImGui.Text("Safe: ")ImGui.SameLine();ImGui.Dummy(75, 1);ImGui.SameLine();ImGui.ProgressBar(currArSafeMoney/100000, 160, 25, formatMoney(currArSafeMoney));ImGui.Separator()
+        end
+        if stats.get_int(MPx.."_PROP_SECURITY_OFFICE") ~= 0 then
+          ImGui.Spacing();ImGui.Spacing();ImGui.Text("¤ Agency ¤")
+          if INTERIOR.GET_INTERIOR_FROM_ENTITY(self.get_ped()) == 0 then
+            ImGui.SameLine();ImGui.Dummy(60, 1); ImGui.SameLine()
+            if ImGui.Button("Teleport##agnc") then
+              script.run_in_fiber(function()
+                local agncBlip = HUD.GET_FIRST_BLIP_INFO_ID(826)
+                local agncLoc
+                if HUD.DOES_BLIP_EXIST(agncBlip) then
+                  agncLoc = HUD.GET_BLIP_COORDS(agncBlip)
+                  selfTP(false, agncLoc)
+                end
+              end)
+            end
+          end
+          local currAgSafeMoney = stats.get_int(MPx.."_FIXER_SAFE_CASH_VALUE")
+          ImGui.Text("Safe: ");ImGui.SameLine();ImGui.Dummy(75, 1);ImGui.SameLine();ImGui.ProgressBar(currAgSafeMoney/250000, 160, 25, formatMoney(currAgSafeMoney));ImGui.Separator()
+        end
+        if stats.get_int(MPx.."_PROP_CLUBHOUSE") ~= 0 then
+          ImGui.Spacing();ImGui.Spacing();ImGui.Text("¤ MC Clubhouse ¤")
+          if INTERIOR.GET_INTERIOR_FROM_ENTITY(self.get_ped()) == 0 then
+            ImGui.SameLine();ImGui.Dummy(10, 1); ImGui.SameLine()
+            if ImGui.Button("Teleport##mc") then
+              script.run_in_fiber(function()
+                local mcBlip = HUD.GET_FIRST_BLIP_INFO_ID(492)
+                local mcLoc
+                if HUD.DOES_BLIP_EXIST(mcBlip) then
+                  mcLoc = HUD.GET_BLIP_COORDS(mcBlip)
+                  selfTP(false, mcLoc)
+                end
+              end)
+            end
+          end
+          local currClubHouseBarProfit = stats.get_int(MPx.."_BIKER_BAR_RESUPPLY_CASH")
+          ImGui.Text("Bar Earnings: ");ImGui.SameLine();ImGui.Dummy(15, 1);ImGui.SameLine();ImGui.ProgressBar(currClubHouseBarProfit/100000, 160, 25, formatMoney(currClubHouseBarProfit));ImGui.Separator()
+        end
+        if stats.get_int(MPx.."_PROP_BAIL_OFFICE") ~= 0 then
+          ImGui.Spacing();ImGui.Spacing();ImGui.Text("¤ Bail Office ¤")
+          --[[
+          if INTERIOR.GET_INTERIOR_FROM_ENTITY(self.get_ped()) == 0 then
+            ImGui.SameLine();ImGui.Dummy(40, 1); ImGui.SameLine()
+            if ImGui.Button("Teleport##bail") then
+              script.run_in_fiber(function()
+                local bailBlip = HUD.GET_FIRST_BLIP_INFO_ID(???)
+                local bailLoc
+                if HUD.DOES_BLIP_EXIST(bailBlip) then
+                  bailLoc = HUD.GET_BLIP_COORDS(bailBlip)
+                  selfTP(false, bailLoc)
+                end
+              end)
+            end
+          end
+          ]]
+
+          local currBailSafe = stats.get_int(MPx.."_BAIL_SAFE_CASH_VALUE")
+          ImGui.Text("Safe: ");ImGui.SameLine();ImGui.Dummy(75, 1);ImGui.SameLine();ImGui.ProgressBar(currBailSafe/100000, 160, 25, formatMoney(currBailSafe))
+        end
+        ImGui.Dummy(1, 10);coloredText("WARNING!\10Teleport buttons might be broken in public sessions.", 40, {255, 204, 0, 0.8})
         ImGui.EndTabItem()
       end
     else
-      ImGui.Text("\n\nUnavailable in Single Player.\n\n")
+      ImGui.Text("\nUnavailable in Single Player.\n\n")
     end
   end)
 elseif tonumber(online_version:get_string()) > 3179 then
-  gui.show_message("YimResupplier", "YimResupplier is not up-to-date.\nPlease update the script!")
+  gui.show_warning("YimResupplier", "YimResupplier is not up-to-date.\nPlease update the script!")
   yim_resupplier = gui.get_tab("YimResupplier")
   yim_resupplier:add_text("YimResupplier is not up-to-date.\n\nPlease update the script.")
 else
-  gui.show_message("YimResupplier", "Failed to load!")
+  gui.show_error("YimResupplier", "Failed to load!")
 end
