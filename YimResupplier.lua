@@ -939,7 +939,13 @@ if tonumber(online_version:get_string()) == 3274 then --3258
         ImGui.EndTabItem()
       end
       if ImGui.BeginTabItem("Business Safes") then
-        ImGui.Spacing();coloredText("This is still a work in progress so not all safes are available and not all functionalities are implemented.\10R* added the ability to collect income from all your safes using a mobile app but they locked it behind a paywall (only available for GTA+ members). Therefore, I'm still looking for a way to do replicate it here but hopefully there will be buttons allowing you to collect your income.", 23.5, {255,99,71, 0.8})ImGui.Spacing()
+        ImGui.Spacing();coloredText("-- README --", 10, readmeColor)
+        if ImGui.IsItemHovered() then
+          ImGui.BeginTooltip()
+            coloredText("This is still a work in progress. Not all intended functionalities have been implemented.", 23.5, {255, 99, 71, 0.8})ImGui.Spacing()
+            coloredText("R* added the ability to collect income from all your safes using a mobile app but they locked it behind a paywall (only available for GTA+ members). This paywall also makes it impossible for us PC players to have this feature. Therefore, I'm still looking for a way to replicate it here but hopefully there will be buttons allowing you to collect your safe income.", 23.5, {255, 255, 255, 0.8})
+          ImGui.EndTooltip()
+        end
         if stats.get_int(MPx.."_PROP_NIGHTCLUB") ~= 0 then
           ImGui.Spacing();ImGui.Spacing();ImGui.Text("¤ Nightclub ¤")
           if INTERIOR.GET_INTERIOR_FROM_ENTITY(self.get_ped()) == 0 then
@@ -1043,6 +1049,24 @@ if tonumber(online_version:get_string()) == 3274 then --3258
           local currBailSafe = stats.get_int(MPx.."_BAIL_SAFE_CASH_VALUE")
           ImGui.Text("Safe: ");ImGui.SameLine();ImGui.Dummy(75, 1);ImGui.SameLine();ImGui.ProgressBar(currBailSafe/100000, 160, 25, formatMoney(currBailSafe))
         end
+        if stats.get_int(MPx.."_SALVAGE_YARD_OWNED") ~= 0 then
+          ImGui.Spacing();ImGui.Spacing();ImGui.Text("¤ Salvage Yard ¤")
+          if INTERIOR.GET_INTERIOR_FROM_ENTITY(self.get_ped()) == 0 then
+            ImGui.SameLine();ImGui.Dummy(20, 1); ImGui.SameLine()
+            if ImGui.Button("Teleport##salvage") then
+              script.run_in_fiber(function()
+                local slvgBlip = HUD.GET_FIRST_BLIP_INFO_ID(867)
+                local slvgLoc
+                if HUD.DOES_BLIP_EXIST(slvgBlip) then
+                  slvgLoc = HUD.GET_BLIP_COORDS(slvgBlip)
+                  selfTP(false, slvgLoc)
+                end
+              end)
+            end
+          end
+          local currSalvSafe = stats.get_int(MPx.."_SALVAGE_SAFE_CASH_VALUE")
+          ImGui.Text("Safe: ");ImGui.SameLine();ImGui.Dummy(75, 1);ImGui.SameLine();ImGui.ProgressBar(currSalvSafe/250000, 160, 25, formatMoney(currSalvSafe))
+        end
         ImGui.Dummy(1, 10);coloredText("WARNING!\10Teleport buttons might be broken in public sessions.", 40, {255, 204, 0, 0.8})
         ImGui.EndTabItem()
       end
@@ -1057,3 +1081,32 @@ elseif tonumber(online_version:get_string()) > 3179 then
 else
   gui.show_error("YimResupplier", "Failed to load!")
 end
+
+script.register_looped("shitty rgb text", function(rgbtxt)
+  if gui.is_open() then
+   rgbtxt:sleep(150)
+    readmeColor = {0, 255, 255, 1}
+   rgbtxt:sleep(150)
+    readmeColor = {0, 127, 255, 1}
+   rgbtxt:sleep(150)
+    readmeColor = {0, 0, 255, 1}
+   rgbtxt:sleep(150)
+    readmeColor = {127, 0, 255, 1}
+   rgbtxt:sleep(150)
+    readmeColor = {255, 0, 255, 1}
+   rgbtxt:sleep(150)
+    readmeColor = {255, 0, 127, 1}
+   rgbtxt:sleep(150)
+    readmeColor = {255, 0, 0, 1}
+   rgbtxt:sleep(150)
+    readmeColor = {255, 127, 0, 1}
+   rgbtxt:sleep(150)
+    readmeColor = {255, 255, 0, 1}
+   rgbtxt:sleep(150)
+    readmeColor = {127, 255, 0, 1}
+   rgbtxt:sleep(150)
+    readmeColor = {0, 255, 0, 1}
+   rgbtxt:sleep(150)
+    readmeColor = {0, 255, 127, 1}
+  end
+end)
