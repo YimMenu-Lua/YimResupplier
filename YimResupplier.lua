@@ -412,7 +412,7 @@ end
 -------------------------------------------------------------------------------
 
 online_version = memory.scan_pattern("8B C3 33 D2 C6 44 24 20"):add(0x24):rip()
-if tonumber(online_version:get_string()) == 3274 then --3258
+if tonumber(online_version:get_string()) == 3274 then
   yim_resupplier = gui.get_tab("YimResupplier")
   default_config = {
         cashUpdgrade1   = false,
@@ -468,10 +468,20 @@ if tonumber(online_version:get_string()) == 3274 then --3258
     ImGui.PopTextWrapPos()
     ImGui.PopStyleColor(1)
   end
-  local function selfTP(keepVehicle, coords)
+  ---@param keepVehicle boolean
+  ---@param setHeading boolean
+  ---@param coords any
+  ---@param heading? integer
+  local function selfTP(keepVehicle, setHeading, coords, heading)
     script.run_in_fiber(function(selftp)
       STREAMING.REQUEST_COLLISION_AT_COORD(coords.x, coords.y, coords.z)
       selftp:sleep(300)
+      if setHeading then
+        if heading == nil then
+          heading = 0
+        end
+        ENTITY.SET_ENTITY_HEADING(self.get_ped(), heading)
+      end
       if keepVehicle then
         PED.SET_PED_COORDS_KEEP_VEHICLE(self.get_ped(), coords.x, coords.y, coords.z)
       else
@@ -480,6 +490,97 @@ if tonumber(online_version:get_string()) == 3274 then --3258
       end
     end)
   end
+
+  --[[ 
+      -- useless
+  local function totalCEOsupplies()
+    local s_T = {}
+    local n   = 0
+    local t_s = 0
+    while n < 5 do
+      local value = stats.get_int("MP" .. stats.get_character_index() .. "_CONTOTALFORWHOUSE" .. tostring(n))
+      n = n + 1
+      table.insert(s_T, value)
+    end
+    for _, v in pairs(s_T) do
+      t_s = t_s + v
+    end
+    return t_s
+  end
+  ]]
+
+  local function getCEOvalue_G(crates)
+    local G
+    if crates ~= nil then
+      if crates == 1 then
+        G = 15732
+      end
+      if crates == 2 then
+        G = 15733
+      end
+      if crates == 3 then
+        G = 15734
+      end
+      if crates == 4 or crates == 5 then
+        G = 15735
+      end
+      if crates == 6 or crates == 7 then
+        G = 15736
+      end
+      if crates == 8 or crates == 9 then
+        G = 15737
+      end
+      if crates >= 10 and crates <= 14 then
+        G = 15738
+      end
+      if crates >= 15 and crates <= 19 then
+        G = 15739
+      end
+      if crates >= 20 and crates <= 24 then
+        G = 15740
+      end
+      if crates >= 25 and crates <= 29 then
+        G = 15741
+      end
+      if crates >= 30 and crates <= 34 then
+        G = 15742
+      end
+      if crates >= 35 and crates <= 39 then
+        G = 15743
+      end
+      if crates >= 40 and crates <= 44 then
+        G = 15744
+      end
+      if crates >= 45 and crates <= 49 then
+        G = 15745
+      end
+      if crates >= 50 and crates <= 59 then
+        G = 15746
+      end
+      if crates >= 60 and crates <= 69 then
+        G = 15747
+      end
+      if crates >= 70 and crates <= 79 then
+        G = 15748
+      end
+      if crates >= 80 and crates <= 89 then
+        G = 15749
+      end
+      if crates >= 90 and crates <= 99 then
+        G = 15750
+      end
+      if crates >= 100 and crates <= 110 then
+        G = 15751
+      end
+      if crates == 111 then
+        G = 15752
+      end
+    else
+      G = 0
+    end
+    return G
+  end
+
   yim_resupplier:add_imgui(function()
     if NETWORK.NETWORK_IS_SESSION_STARTED() then
       local MPx = "MP"..stats.get_character_index()
@@ -525,14 +626,20 @@ if tonumber(online_version:get_string()) == 3274 then --3258
       end
       ImGui.BeginTabBar("YimResupplier", ImGuiTabBarFlags.None)
       if ImGui.BeginTabItem("Manage Supplies") then
-        local hangarSupply = stats.get_int(MPx.."_HANGAR_CONTRABAND_TOTAL")
-        local cashSupply   = stats.get_int(MPx.."_MATTOTALFORFACTORY0")
-        local cokeSupply   = stats.get_int(MPx.."_MATTOTALFORFACTORY1")
-        local methSupply   = stats.get_int(MPx.."_MATTOTALFORFACTORY2")
-        local weedSupply   = stats.get_int(MPx.."_MATTOTALFORFACTORY3")
-        local dfSupply     = stats.get_int(MPx.."_MATTOTALFORFACTORY4")
-        local bunkerSupply = stats.get_int(MPx.."_MATTOTALFORFACTORY5")
-        local acidSupply   = stats.get_int(MPx.."_MATTOTALFORFACTORY6")
+        local wh1Supplies  = stats.get_int(MPx .. "_CONTOTALFORWHOUSE0")
+        local wh2Supplies  = stats.get_int(MPx .. "_CONTOTALFORWHOUSE1")
+        local wh3Supplies  = stats.get_int(MPx .. "_CONTOTALFORWHOUSE2")
+        local wh4Supplies  = stats.get_int(MPx .. "_CONTOTALFORWHOUSE3")
+        local wh5Supplies  = stats.get_int(MPx .. "_CONTOTALFORWHOUSE4")
+        local hangarSupply = stats.get_int(MPx .. "_HANGAR_CONTRABAND_TOTAL")
+        local cashSupply   = stats.get_int(MPx .. "_MATTOTALFORFACTORY0")
+        local cokeSupply   = stats.get_int(MPx .. "_MATTOTALFORFACTORY1")
+        local methSupply   = stats.get_int(MPx .. "_MATTOTALFORFACTORY2")
+        local weedSupply   = stats.get_int(MPx .. "_MATTOTALFORFACTORY3")
+        local dfSupply     = stats.get_int(MPx .. "_MATTOTALFORFACTORY4")
+        local bunkerSupply = stats.get_int(MPx .. "_MATTOTALFORFACTORY5")
+        local acidSupply   = stats.get_int(MPx .. "_MATTOTALFORFACTORY6")
+        local ceoSupply    = (wh1Supplies + wh2Supplies + wh3Supplies + wh4Supplies + wh5Supplies)
         ImGui.Spacing();ImGui.Text("Hangar Cargo");ImGui.Separator()
         if hangarOwned then
           ImGui.Text("Current Supplies:");ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.ProgressBar((hangarSupply/50), 140, 30)
@@ -564,13 +671,54 @@ if tonumber(online_version:get_string()) == 3274 then --3258
                 local hangarLoc
                 if HUD.DOES_BLIP_EXIST(hangarBlip) then
                   hangarLoc = HUD.GET_BLIP_COORDS(hangarBlip)
-                  selfTP(true, hangarLoc)
+                  selfTP(true, false, hangarLoc)
                 end
               end)
             end
           end
         else
           ImGui.Text("You don't own a Hangar.")
+        end
+        ImGui.Spacing();ImGui.Text("CEO Warehouses");ImGui.Separator()
+        ImGui.Text("Current Supplies:");ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.ProgressBar((ceoSupply/555), 140, 30)
+        if ceoSupply < 555 then
+          if ImGui.Button("Source Random Crate(s)##ceo") then
+            script.run_in_fiber(function(fillceo)
+              for i = 12, 16 do
+                stats.set_bool_masked(MPx.."_FIXERPSTAT_BOOL1", true, i)
+                fillceo:sleep(500) -- half second delay between each warehouse
+              end
+            end)
+          end
+          ImGui.SameLine();ceoLoop, used = ImGui.Checkbox("Auto-Fill##ceo", ceoLoop, true)
+          if ceoLoop then
+            script.run_in_fiber(function(ceoloop)
+              repeat
+                for i = 12, 16 do
+                  stats.set_bool_masked(MPx.."_FIXERPSTAT_BOOL1", true, i)
+                  ceoloop:sleep(500) -- half second delay between each warehouse
+                end
+                ceoloop:sleep(969) -- add a delay to prevent transaction error or infinite 'transaction pending'
+              until
+                ceoSupply == 555 or ceoLoop == false
+            end)
+          end
+        else
+          if ceoLoop then
+            ceoLoop = false
+          end
+        end
+        if INTERIOR.GET_INTERIOR_FROM_ENTITY(self.get_ped()) == 0 then
+          if ImGui.Button("Teleport To Office") then
+            script.run_in_fiber(function()
+              local ceoBlip = HUD.GET_FIRST_BLIP_INFO_ID(475)
+              local ceoLoc
+              if HUD.DOES_BLIP_EXIST(ceoBlip) then
+                ceoLoc = HUD.GET_BLIP_COORDS(ceoBlip)
+                selfTP(true, false, ceoLoc)
+              end
+            end)
+          end
         end
         ImGui.Spacing();ImGui.Text("MC Supplies");ImGui.Separator()
         if fCashOwned then
@@ -590,7 +738,7 @@ if tonumber(online_version:get_string()) == 3274 then --3258
                 local fcLoc
                 if HUD.DOES_BLIP_EXIST(fcBlip) then
                   fcLoc = HUD.GET_BLIP_COORDS(fcBlip)
-                  selfTP(false, fcLoc)
+                  selfTP(false, false, fcLoc)
                 end
               end)
             end
@@ -615,7 +763,7 @@ if tonumber(online_version:get_string()) == 3274 then --3258
                 local cokeLoc
                 if HUD.DOES_BLIP_EXIST(cokeBlip) then
                   cokeLoc = HUD.GET_BLIP_COORDS(cokeBlip)
-                  selfTP(false, cokeLoc)
+                  selfTP(false, false, cokeLoc)
                 end
               end)
             end
@@ -640,7 +788,7 @@ if tonumber(online_version:get_string()) == 3274 then --3258
                 local methLoc
                 if HUD.DOES_BLIP_EXIST(methBlip) then
                   methLoc = HUD.GET_BLIP_COORDS(methBlip)
-                  selfTP(false, methLoc)
+                  selfTP(false, false, methLoc)
                 end
               end)
             end
@@ -665,7 +813,7 @@ if tonumber(online_version:get_string()) == 3274 then --3258
                 local weedLoc
                 if HUD.DOES_BLIP_EXIST(weedBlip) then
                   weedLoc = HUD.GET_BLIP_COORDS(weedBlip)
-                  selfTP(false, weedLoc)
+                  selfTP(false, false, weedLoc)
                 end
               end)
             end
@@ -690,7 +838,7 @@ if tonumber(online_version:get_string()) == 3274 then --3258
                 local fdLoc
                 if HUD.DOES_BLIP_EXIST(fdBlip) then
                   fdLoc = HUD.GET_BLIP_COORDS(fdBlip)
-                  selfTP(false, fdLoc)
+                  selfTP(false, false, fdLoc)
                 end
               end)
             end
@@ -715,7 +863,7 @@ if tonumber(online_version:get_string()) == 3274 then --3258
                 local bunkerLoc
                 if HUD.DOES_BLIP_EXIST(bunkerBlip) then
                   bunkerLoc = HUD.GET_BLIP_COORDS(bunkerBlip)
-                  selfTP(true, bunkerLoc)
+                  selfTP(true, false, bunkerLoc)
                 end
               end)
             end
@@ -740,19 +888,21 @@ if tonumber(online_version:get_string()) == 3274 then --3258
                 local acidLoc
                 if HUD.DOES_BLIP_EXIST(acidBlip) then
                   acidLoc = HUD.GET_BLIP_COORDS(acidBlip)
-                  selfTP(true, acidLoc)
+                  selfTP(true, false, acidLoc)
                 end
               end)
             end
           end
-          ImGui.Dummy(1, 10);coloredText("WARNING!\10Teleport buttons might be broken in public sessions.", 40, {255, 204, 0, 0.8})
+          if INTERIOR.GET_INTERIOR_FROM_ENTITY(self.get_ped()) == 0 then
+            ImGui.Dummy(1, 10);coloredText("WARNING!\10Teleport buttons might be broken in public sessions.", 40, {255, 204, 0, 0.8})
+          end
         else
           ImGui.Text("You don't own an Acid Lab.")
         end
         ImGui.EndTabItem()
       end
       if ImGui.BeginTabItem("Production Overview") then
-        ---------------------------------------Hangar----------------------------------------------------------------------
+        --------------------------------------- Hangar ----------------------------------------------------------------------
         if hangarOwned then
           ImGui.Text("Hangar:")
           local hangarCargo = stats.get_int(MPx.."_HANGAR_CONTRABAND_TOTAL")
@@ -760,9 +910,45 @@ if tonumber(online_version:get_string()) == 3274 then --3258
           ImGui.Text("Product:");ImGui.SameLine();ImGui.Dummy(5, 1);ImGui.SameLine();ImGui.ProgressBar((hangarCargo/50), 160, 25, tostring(hangarCargo).." Crates ("..tostring(math.floor(hangarCargo / 0.5)).."%)")
           ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.Text("Value:");ImGui.SameLine()ImGui.Text(formatMoney(hangarTotal))
         end
-        ---------------------------------------Fake Cash-------------------------------------------------------------------
+        --------------------------------------- CEO ----------------------------------------------------------------------
+        ImGui.Separator();ImGui.Text("CEO:")
+        local wh1Supplies = stats.get_int(MPx .. "_CONTOTALFORWHOUSE0")
+        local wh2Supplies = stats.get_int(MPx .. "_CONTOTALFORWHOUSE1")
+        local wh3Supplies = stats.get_int(MPx .. "_CONTOTALFORWHOUSE2")
+        local wh4Supplies = stats.get_int(MPx .. "_CONTOTALFORWHOUSE3")
+        local wh5Supplies = stats.get_int(MPx .. "_CONTOTALFORWHOUSE4")
+        if wh1Supplies ~= nil and wh1Supplies > 0 then
+          wh1Value = (globals.get_int(262145 + (getCEOvalue_G(wh1Supplies))))
+        else
+          wh1Value = 0
+        end
+        if wh2Supplies ~= nil and wh2Supplies > 0 then
+          wh2Value = (globals.get_int(262145 + (getCEOvalue_G(wh2Supplies))))
+        else
+          wh2Value = 0
+        end
+        if wh3Supplies ~= nil and wh3Supplies > 0 then
+          wh3Value = (globals.get_int(262145 + (getCEOvalue_G(wh3Supplies))))
+        else
+          wh3Value = 0
+        end
+        if wh4Supplies ~= nil and wh4Supplies > 0 then
+          wh4Value = (globals.get_int(262145 + (getCEOvalue_G(wh4Supplies))))
+        else
+          wh4Value = 0
+        end
+        if wh5Supplies ~= nil and wh5Supplies > 0 then
+          wh5Value = (globals.get_int(262145 + (getCEOvalue_G(wh5Supplies))))
+        else
+          wh5Value = 0
+        end
+        local ceoSupply   = (wh1Supplies + wh2Supplies + wh3Supplies + wh4Supplies + wh5Supplies)
+        ceoTotal          = ((wh1Value * wh1Supplies) + (wh2Value * wh2Supplies) + (wh3Value * wh3Supplies) + (wh4Value * wh4Supplies) + (wh5Value * wh5Supplies))
+        ImGui.Text("Product:");ImGui.SameLine();ImGui.Dummy(5, 1);ImGui.SameLine();ImGui.ProgressBar((ceoSupply/555), 160, 25, tostring(ceoSupply).." Crates ("..tostring(math.floor((ceoSupply / 555) * 100)).."%)")
+        ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.Text("Value:");ImGui.SameLine()ImGui.Text(formatMoney(ceoTotal))
+        --------------------------------------- Fake Cash -------------------------------------------------------------------
         if fCashOwned then
-          ImGui.Separator()ImGui.Text("Fake Cash:");ImGui.SameLine()
+          ImGui.Separator();ImGui.Text("Fake Cash:");ImGui.SameLine()
           cashUpdgrade1, used = ImGui.Checkbox("Equipment Upgrade##cash", cashUpdgrade1, true);ImGui.SameLine()
           if used then
             saveToConfig("cashUpdgrade1", cashUpdgrade1)
@@ -934,7 +1120,7 @@ if tonumber(online_version:get_string()) == 3274 then --3258
           ImGui.SameLine();ImGui.Dummy(10, 1);ImGui.SameLine();ImGui.Text("Value:");ImGui.SameLine();ImGui.Text(formatMoney(acidTotal))
         end
         ImGui.Spacing();ImGui.Separator()
-        local finalAmt = (hangarTotal + cashTotal + cokeTotal + methTotal + weedTotal + fdTotal + bunkerTotal + acidTotal)
+        local finalAmt = (hangarTotal + ceoTotal + cashTotal + cokeTotal + methTotal + weedTotal + fdTotal + bunkerTotal + acidTotal)
         ImGui.Spacing();ImGui.Text("Total Profit = "..formatMoney(finalAmt))
         ImGui.EndTabItem()
       end
@@ -956,7 +1142,7 @@ if tonumber(online_version:get_string()) == 3274 then --3258
                 local ncLoc
                 if HUD.DOES_BLIP_EXIST(ncBlip) then
                   ncLoc = HUD.GET_BLIP_COORDS(ncBlip)
-                  selfTP(false, ncLoc)
+                  selfTP(false, false, ncLoc)
                 end
               end)
             end
@@ -984,7 +1170,7 @@ if tonumber(online_version:get_string()) == 3274 then --3258
                 local arLoc
                 if HUD.DOES_BLIP_EXIST(arBlip) then
                   arLoc = HUD.GET_BLIP_COORDS(arBlip)
-                  selfTP(false, arLoc)
+                  selfTP(false, false, arLoc)
                 end
               end)
             end
@@ -1002,7 +1188,7 @@ if tonumber(online_version:get_string()) == 3274 then --3258
                 local agncLoc
                 if HUD.DOES_BLIP_EXIST(agncBlip) then
                   agncLoc = HUD.GET_BLIP_COORDS(agncBlip)
-                  selfTP(false, agncLoc)
+                  selfTP(false, false, agncLoc)
                 end
               end)
             end
@@ -1020,7 +1206,7 @@ if tonumber(online_version:get_string()) == 3274 then --3258
                 local mcLoc
                 if HUD.DOES_BLIP_EXIST(mcBlip) then
                   mcLoc = HUD.GET_BLIP_COORDS(mcBlip)
-                  selfTP(false, mcLoc)
+                  selfTP(false, false, mcLoc)
                 end
               end)
             end
@@ -1047,7 +1233,7 @@ if tonumber(online_version:get_string()) == 3274 then --3258
           ]]
 
           local currBailSafe = stats.get_int(MPx.."_BAIL_SAFE_CASH_VALUE")
-          ImGui.Text("Safe: ");ImGui.SameLine();ImGui.Dummy(75, 1);ImGui.SameLine();ImGui.ProgressBar(currBailSafe/100000, 160, 25, formatMoney(currBailSafe))
+          ImGui.Text("Safe: ");ImGui.SameLine();ImGui.Dummy(75, 1);ImGui.SameLine();ImGui.ProgressBar(currBailSafe/100000, 160, 25, formatMoney(currBailSafe));ImGui.Separator()
         end
         if stats.get_int(MPx.."_SALVAGE_YARD_OWNED") ~= 0 then
           ImGui.Spacing();ImGui.Spacing();ImGui.Text("¤ Salvage Yard ¤")
@@ -1059,7 +1245,7 @@ if tonumber(online_version:get_string()) == 3274 then --3258
                 local slvgLoc
                 if HUD.DOES_BLIP_EXIST(slvgBlip) then
                   slvgLoc = HUD.GET_BLIP_COORDS(slvgBlip)
-                  selfTP(false, slvgLoc)
+                  selfTP(false, true, slvgLoc, 180)
                 end
               end)
             end
@@ -1067,7 +1253,9 @@ if tonumber(online_version:get_string()) == 3274 then --3258
           local currSalvSafe = stats.get_int(MPx.."_SALVAGE_SAFE_CASH_VALUE")
           ImGui.Text("Safe: ");ImGui.SameLine();ImGui.Dummy(75, 1);ImGui.SameLine();ImGui.ProgressBar(currSalvSafe/250000, 160, 25, formatMoney(currSalvSafe))
         end
-        ImGui.Dummy(1, 10);coloredText("WARNING!\10Teleport buttons might be broken in public sessions.", 40, {255, 204, 0, 0.8})
+        if INTERIOR.GET_INTERIOR_FROM_ENTITY(self.get_ped()) == 0 then
+          ImGui.Dummy(1, 10);coloredText("WARNING!\10Teleport buttons might be broken in public sessions.", 40, {255, 204, 0, 0.8})
+        end
         ImGui.EndTabItem()
       end
     else
