@@ -1,5 +1,7 @@
 ---@diagnostic disable: undefined-global, lowercase-global
 
+local game_build = 3323
+
 --[[
   #### RXI JSON Library (Modified by [Harmless](https://github.com/harmless05)).
 
@@ -412,7 +414,7 @@ end
 -------------------------------------------------------------------------------
 
 game_version = memory.scan_pattern("8B C3 33 D2 C6 44 24 20"):add(0x24):rip()
-if tonumber(game_version:get_string()) == 3274 then
+if tonumber(game_version:get_string()) == game_build then
   yim_resupplier        = gui.get_tab("YimResupplier")
   default_config        = {
     cashUpdgrade1   = false,
@@ -1298,10 +1300,8 @@ if tonumber(game_version:get_string()) == 3274 then
       ImGui.Text("\nUnavailable in Single Player.\n\n")
     end
   end)
-elseif tonumber(game_version:get_string()) > 3179 then
+else
   gui.show_warning("YimResupplier", "YimResupplier is not up-to-date.\nPlease update the script!")
   yim_resupplier = gui.get_tab("YimResupplier")
   yim_resupplier:add_text("YimResupplier is not up-to-date.\n\nPlease update the script.")
-else
-  gui.show_error("YimResupplier", "Failed to load!")
 end
