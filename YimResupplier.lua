@@ -1,6 +1,6 @@
 ---@diagnostic disable: undefined-global, lowercase-global
 
-local game_build = 3323
+local game_build = 3337
 
 --[[
   #### RXI JSON Library (Modified by [Harmless](https://github.com/harmless05)).
