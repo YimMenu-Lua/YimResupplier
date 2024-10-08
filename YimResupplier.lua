@@ -635,10 +635,10 @@ if tonumber(game_version:get_string()) == game_build then
         local wh5Supplies  = stats.get_int(MPx .. "_CONTOTALFORWHOUSE4")
         local hangarSupply = stats.get_int(MPx .. "_HANGAR_CONTRABAND_TOTAL")
         local cashSupply   = stats.get_int(MPx .. "_MATTOTALFORFACTORY0")
-        local cokeSupply   = stats.get_int(MPx .. "_MATTOTALFORFACTORY1")
+        local dfSupply     = stats.get_int(MPx .. "_MATTOTALFORFACTORY1")
         local methSupply   = stats.get_int(MPx .. "_MATTOTALFORFACTORY2")
         local weedSupply   = stats.get_int(MPx .. "_MATTOTALFORFACTORY3")
-        local dfSupply     = stats.get_int(MPx .. "_MATTOTALFORFACTORY4")
+        local cokeSupply   = stats.get_int(MPx .. "_MATTOTALFORFACTORY4")
         local bunkerSupply = stats.get_int(MPx .. "_MATTOTALFORFACTORY5")
         local acidSupply   = stats.get_int(MPx .. "_MATTOTALFORFACTORY6")
         local ceoSupply    = (wh1Supplies + wh2Supplies + wh3Supplies + wh4Supplies + wh5Supplies)
@@ -757,7 +757,7 @@ if tonumber(game_version:get_string()) == game_build then
           if math.ceil(cokeSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##Cocaine") then
-              globals.set_int(1663174 + 1 + 1, 1)
+              globals.set_int(1663174 + 4 + 1, 1)
             end
             ImGui.SameLine(); ImGui.Dummy(5, 1)
           end
@@ -834,7 +834,7 @@ if tonumber(game_version:get_string()) == game_build then
           if math.ceil(dfSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##DocumentForgery") then
-              globals.set_int(1663174 + 4 + 1, 1)
+              globals.set_int(1663174 + 1 + 1, 1)
             end
             ImGui.SameLine(); ImGui.Dummy(5, 1)
           end
