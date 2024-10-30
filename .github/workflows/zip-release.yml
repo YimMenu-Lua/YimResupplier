@@ -1,0 +1,69 @@
+name: Zip Release
+on: 
+  push:
+    branches:
+      - main
+    paths:
+      - '**.lua'
+    tags:
+      - 'latest'
+  workflow_dispatch:
+
+jobs:
+  Main:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: Delete Existing Release
+      id: delete_release
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const owner = context.repo.owner;
+          const repo = context.repo.repo;
+          const tag = "latest";
+
+          const releases = await github.rest.repos.listReleases({
+            owner: owner,
+            repo: repo,
+          });
+    
+          const release = releases.data.find(release => release.tag_name === tag);
+
+          if (release) {
+            await github.rest.repos.deleteRelease({
+              owner: owner,
+              repo: repo,
+              release_id: release.id,
+            });
+            console.log(`Deleted release with ID ${release.id}`);
+          } else {
+            console.log("No existing release to delete");
+          }
+
+          try {
+            await github.rest.git.deleteRef({
+              owner: owner,
+              repo: repo,
+              ref: `tags/${tag}`,
+            });
+            console.log(`Deleted tag ${tag}`);
+          } catch (error) {
+            console.error(`Error deleting tag: ${error.message}`);
+          }
+
+    - name: Create Archive
+      id: create_archive
+      uses: thedoctor0/zip-release@0.7.6
+      with:
+        type: 'zip'
+        filename: "YimResupplier.zip"
+        exclusions: /.git* *.json *.md
+
+    - name: Upload Release
+      id: upload_release
+      uses: ncipollo/release-action@v1.14.0
+      with:
+        artifacts: "YimResupplier.zip"
+        name: YimResupplier
+        tag: "latest"

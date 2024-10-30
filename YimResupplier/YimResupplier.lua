@@ -1,422 +1,16 @@
 ---@diagnostic disable: undefined-global, lowercase-global
 
-local game_build = 3351
-
---[[
-  #### RXI JSON Library (Modified by [Harmless](https://github.com/harmless05)).
-
-  <u>Credits:</u> [RXI's json.lua](https://github.com/rxi/json.lua) for the original library.
-
-]]
-local function json()
-  local json = { _version = "0.1.2" }
-  --encode
-  local encode
-
-  local escape_char_map = {
-    ["\\"] = "\\",
-    ["\""] = "\"",
-    ["\b"] = "b",
-    ["\f"] = "f",
-    ["\n"] = "n",
-    ["\r"] = "r",
-    ["\t"] = "t",
-  }
-
-  local escape_char_map_inv = { ["/"] = "/" }
-  for k, v in pairs(escape_char_map) do
-    escape_char_map_inv[v] = k
-  end
-
-  local function escape_char(c)
-    return "\\" .. (escape_char_map[c] or string.format("u%04x", c:byte()))
-  end
-
-  local function encode_nil(val)
-    return "null"
-  end
-
-  local function encode_table(val, stack)
-    local res = {}
-    stack = stack or {}
-    if stack[val] then error("circular reference") end
-
-    stack[val] = true
-
-    if rawget(val, 1) ~= nil or next(val) == nil then
-      local n = 0
-      for k in pairs(val) do
-        if type(k) ~= "number" then
-          error("invalid table: mixed or invalid key types")
-        end
-        n = n + 1
-      end
-      if n ~= #val then
-        error("invalid table: sparse array")
-      end
-      for i, v in ipairs(val) do
-        table.insert(res, encode(v, stack))
-      end
-      stack[val] = nil
-      return "[" .. table.concat(res, ",") .. "]"
-    else
-      for k, v in pairs(val) do
-        if type(k) ~= "string" then
-          error("invalid table: mixed or invalid key types")
-        end
-        table.insert(res, encode(k, stack) .. ":" .. encode(v, stack))
-      end
-      stack[val] = nil
-      return "{" .. table.concat(res, ",") .. "}"
-    end
-  end
-
-  local function encode_string(val)
-    return '"' .. val:gsub('[%z\1-\31\\"]', escape_char) .. '"'
-  end
-
-  local function encode_number(val)
-    if val ~= val or val <= -math.huge or val >= math.huge then
-      error("unexpected number value '" .. tostring(val) .. "'")
-    end
-    return string.format("%.14g", val)
-  end
-
-  local type_func_map = {
-    ["nil"] = encode_nil,
-    ["table"] = encode_table,
-    ["string"] = encode_string,
-    ["number"] = encode_number,
-    ["boolean"] = tostring,
-  }
-
-  encode = function(val, stack)
-    local t = type(val)
-    local f = type_func_map[t]
-    if f then
-      return f(val, stack)
-    end
-    error("unexpected type '" .. t .. "'")
-  end
-
-  function json.encode(val)
-    return (encode(val))
-  end
-
-  --decode
-  local parse
-
-  local function create_set(...)
-    local res = {}
-    for i = 1, select("#", ...) do
-      res[select(i, ...)] = true
-    end
-    return res
-  end
-
-  local space_chars  = create_set(" ", "\t", "\r", "\n")
-  local delim_chars  = create_set(" ", "\t", "\r", "\n", "]", "}", ",")
-  local escape_chars = create_set("\\", "/", '"', "b", "f", "n", "r", "t", "u")
-  local literals     = create_set("true", "false", "null")
-
-  local literal_map  = {
-    ["true"] = true,
-    ["false"] = false,
-    ["null"] = nil,
-  }
-
-  local function next_char(str, idx, set, negate)
-    for i = idx, #str do
-      if set[str:sub(i, i)] ~= negate then
-        return i
-      end
-    end
-    return #str + 1
-  end
-
-  local function decode_error(str, idx, msg)
-    local line_count = 1
-    local col_count = 1
-    for i = 1, idx - 1 do
-      col_count = col_count + 1
-      if str:sub(i, i) == "\n" then
-        line_count = line_count + 1
-        col_count = 1
-      end
-    end
-    error(string.format("%s at line %d col %d", msg, line_count, col_count))
-  end
-
-  local function codepoint_to_utf8(n)
-    local f = math.floor
-    if n <= 0x7f then
-      return string.char(n)
-    elseif n <= 0x7ff then
-      return string.char(f(n / 64) + 192, n % 64 + 128)
-    elseif n <= 0xffff then
-      return string.char(f(n / 4096) + 224, f(n % 4096 / 64) + 128, n % 64 + 128)
-    elseif n <= 0x10ffff then
-      return string.char(f(n / 262144) + 240, f(n % 262144 / 4096) + 128,
-        f(n % 4096 / 64) + 128, n % 64 + 128)
-    end
-    error(string.format("invalid unicode codepoint '%x'", n))
-  end
-
-  local function parse_unicode_escape(s)
-    local n1 = tonumber(s:sub(1, 4), 16)
-    local n2 = tonumber(s:sub(7, 10), 16)
-    if n2 then
-      return codepoint_to_utf8((n1 - 0xd800) * 0x400 + (n2 - 0xdc00) + 0x10000)
-    else
-      return codepoint_to_utf8(n1)
-    end
-  end
-
-  local function parse_string(str, i)
-    local res = ""
-    local j = i + 1
-    local k = j
-
-    while j <= #str do
-      local x = str:byte(j)
-      if x < 32 then
-        decode_error(str, j, "control character in string")
-      elseif x == 92 then -- `\`: Escape
-        res = res .. str:sub(k, j - 1)
-        j = j + 1
-        local c = str:sub(j, j)
-        if c == "u" then
-          local hex = str:match("^[dD][89aAbB]%x%x\\u%x%x%x%x", j + 1)
-              or str:match("^%x%x%x%x", j + 1)
-              or decode_error(str, j - 1, "invalid unicode escape in string")
-          res = res .. parse_unicode_escape(hex)
-          j = j + #hex
-        else
-          if not escape_chars[c] then
-            decode_error(str, j - 1, "invalid escape char '" .. c .. "' in string")
-          end
-          res = res .. escape_char_map_inv[c]
-        end
-        k = j + 1
-      elseif x == 34 then -- `"`: End of string
-        res = res .. str:sub(k, j - 1)
-        return res, j + 1
-      end
-      j = j + 1
-    end
-    decode_error(str, i, "expected closing quote for string")
-  end
-
-  local function parse_number(str, i)
-    local x = next_char(str, i, delim_chars)
-    local s = str:sub(i, x - 1)
-    local n = tonumber(s)
-    if not n then
-      decode_error(str, i, "invalid number '" .. s .. "'")
-    end
-    return n, x
-  end
-
-  local function parse_literal(str, i)
-    local x = next_char(str, i, delim_chars)
-    local word = str:sub(i, x - 1)
-    if not literals[word] then
-      decode_error(str, i, "invalid literal '" .. word .. "'")
-    end
-    return literal_map[word], x
-  end
-
-  local function parse_array(str, i)
-    local res = {}
-    local n = 1
-    i = i + 1
-    while 1 do
-      local x
-      i = next_char(str, i, space_chars, true)
-      -- Empty / end of array?
-      if str:sub(i, i) == "]" then
-        i = i + 1
-        break
-      end
-      -- Read token
-      x, i = parse(str, i)
-      res[n] = x
-      n = n + 1
-      -- Next token
-      i = next_char(str, i, space_chars, true)
-      local chr = str:sub(i, i)
-      i = i + 1
-      if chr == "]" then break end
-      if chr ~= "," then decode_error(str, i, "expected ']' or ','") end
-    end
-    return res, i
-  end
-
-  local function parse_object(str, i)
-    local res = {}
-    i = i + 1
-    while 1 do
-      local key, val
-      i = next_char(str, i, space_chars, true)
-      -- Empty / end of object?
-      if str:sub(i, i) == "}" then
-        i = i + 1
-        break
-      end
-      -- Read key
-      if str:sub(i, i) ~= '"' then
-        decode_error(str, i, "expected string for key")
-      end
-      key, i = parse(str, i)
-      -- Read ':' delimiter
-      i = next_char(str, i, space_chars, true)
-      if str:sub(i, i) ~= ":" then
-        decode_error(str, i, "expected ':' after key")
-      end
-      i = next_char(str, i + 1, space_chars, true)
-      -- Read value
-      val, i = parse(str, i)
-      -- Set
-      res[key] = val
-      -- Next token
-      i = next_char(str, i, space_chars, true)
-      local chr = str:sub(i, i)
-      i = i + 1
-      if chr == "}" then break end
-      if chr ~= "," then decode_error(str, i, "expected '}' or ','") end
-    end
-    return res, i
-  end
-
-  local char_func_map = {
-    ['"'] = parse_string,
-    ["0"] = parse_number,
-    ["1"] = parse_number,
-    ["2"] = parse_number,
-    ["3"] = parse_number,
-    ["4"] = parse_number,
-    ["5"] = parse_number,
-    ["6"] = parse_number,
-    ["7"] = parse_number,
-    ["8"] = parse_number,
-    ["9"] = parse_number,
-    ["-"] = parse_number,
-    ["t"] = parse_literal,
-    ["f"] = parse_literal,
-    ["n"] = parse_literal,
-    ["["] = parse_array,
-    ["{"] = parse_object,
-  }
-
-  parse = function(str, idx)
-    local chr = str:sub(idx, idx)
-    local f = char_func_map[chr]
-    if f then
-      return f(str, idx)
-    end
-    decode_error(str, idx, "unexpected character '" .. chr .. "'")
-  end
-
-  function json.decode(str)
-    if type(str) ~= "string" then
-      error("expected argument of type string, got " .. type(str))
-    end
-    local res, idx = parse(str, next_char(str, 1, space_chars, true))
-    idx = next_char(str, idx, space_chars, true)
-    if idx <= #str then
-      decode_error(str, idx, "trailing garbage")
-    end
-    return res
-  end
-
-  return json
+SCRIPT_NAME = "YimResupplier"
+local target_build = 3351
+local CFG = require("YimConfig")
+local function getGameBuild()
+  local game_version = memory.scan_pattern("8B C3 33 D2 C6 44 24 20"):add(0x24):rip()
+  return tonumber(game_version:get_string())
 end
 
---[[ **Config System For Lua**
-
-  - Written by [Harmless](https://github.com/harmless05).
-
-  - Uses [RXI JSON Library](https://github.com/rxi/json.lua).
-]]
-local jsonConf = json()
-local function writeToFile(filename, data)
-  local file, _ = io.open(filename, "w")
-  if file == nil then
-    log.warning("Failed to write to " .. filename)
-    gui.show_error("YimActions", "Failed to write to " .. filename)
-    return false
-  end
-  file:write(jsonConf.encode(data))
-  file:close()
-  return true
-end
-
-local function readFromFile(filename)
-  local file, _ = io.open(filename, "r")
-  if file == nil then
-    return nil
-  end
-  local content = file:read("*all")
-  file:close()
-  return jsonConf.decode(content)
-end
-
-local function checkAndCreateConfig(default_config)
-  local config = readFromFile("YimResupplier.json")
-  if config == nil then
-    log.warning("Config file not found, creating a default config")
-    gui.show_warning("YimActions", "Config file not found, creating a default config")
-    if not writeToFile("YimResupplier.json", default_config) then
-      return false
-    end
-    config = default_config
-  end
-
-  for key, defaultValue in pairs(default_config) do
-    if config[key] == nil then
-      config[key] = defaultValue
-    end
-  end
-
-  if not writeToFile("YimResupplier.json", config) then
-    return false
-  end
-  return true
-end
-
-local function readAndDecodeConfig()
-  while not checkAndCreateConfig(default_config) do
-    -- Wait for the file to be created
-    os.execute("sleep " .. tonumber(1))
-    log.debug("Waiting for YimResupplier.json to be created")
-  end
-  return readFromFile("YimResupplier.json")
-end
-
-local function saveToConfig(item_tag, value)
-  local t = readAndDecodeConfig()
-  if t then
-    t[item_tag] = value
-    if not writeToFile("YimResupplier.json", t) then
-      log.debug("Failed to encode JSON to YimResupplier.json")
-    end
-  end
-end
-
-local function readFromConfig(item_tag)
-  local t = readAndDecodeConfig()
-  if t then
-    return t[item_tag]
-  else
-    log.debug("Failed to decode JSON from YimResupplier.json")
-  end
-end
--------------------------------------------------------------------------------
-
-game_version = memory.scan_pattern("8B C3 33 D2 C6 44 24 20"):add(0x24):rip()
-if tonumber(game_version:get_string()) == game_build then
+if getGameBuild() == target_build then
   yim_resupplier        = gui.get_tab("YimResupplier")
-  default_config        = {
+  DEFAULT_CONFIG        = {
     cashUpdgrade1   = false,
     cashUpdgrade2   = false,
     cokeUpdgrade1   = false,
@@ -447,19 +41,19 @@ if tonumber(game_version:get_string()) == game_build then
   local fdTotal         = 0
   local bunkerTotal     = 0
   local acidTotal       = 0
-  local cashUpdgrade1   = readFromConfig("cashUpdgrade1")
-  local cashUpdgrade2   = readFromConfig("cashUpdgrade2")
-  local cokeUpdgrade1   = readFromConfig("cokeUpdgrade1")
-  local cokeUpdgrade2   = readFromConfig("cokeUpdgrade2")
-  local methUpdgrade1   = readFromConfig("methUpdgrade1")
-  local methUpdgrade2   = readFromConfig("methUpdgrade2")
-  local weedUpdgrade1   = readFromConfig("weedUpdgrade1")
-  local weedUpdgrade2   = readFromConfig("weedUpdgrade2")
-  local fdUpdgrade1     = readFromConfig("fdUpdgrade1")
-  local fdUpdgrade2     = readFromConfig("fdUpdgrade2")
-  local bunkerUpdgrade1 = readFromConfig("bunkerUpdgrade1")
-  local bunkerUpdgrade2 = readFromConfig("bunkerUpdgrade2")
-  local acidUpdgrade    = readFromConfig("acidUpdgrade")
+  local cashUpdgrade1   = CFG.read("cashUpdgrade1")
+  local cashUpdgrade2   = CFG.read("cashUpdgrade2")
+  local cokeUpdgrade1   = CFG.read("cokeUpdgrade1")
+  local cokeUpdgrade2   = CFG.read("cokeUpdgrade2")
+  local methUpdgrade1   = CFG.read("methUpdgrade1")
+  local methUpdgrade2   = CFG.read("methUpdgrade2")
+  local weedUpdgrade1   = CFG.read("weedUpdgrade1")
+  local weedUpdgrade2   = CFG.read("weedUpdgrade2")
+  local fdUpdgrade1     = CFG.read("fdUpdgrade1")
+  local fdUpdgrade2     = CFG.read("fdUpdgrade2")
+  local bunkerUpdgrade1 = CFG.read("bunkerUpdgrade1")
+  local bunkerUpdgrade2 = CFG.read("bunkerUpdgrade2")
+  local acidUpdgrade    = CFG.read("acidUpdgrade")
   local function formatMoney(value)
     return "$" .. tostring(value):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
   end
@@ -652,7 +246,7 @@ if tonumber(game_version:get_string()) == game_build then
                 stats.set_bool_masked(MPx .. "_DLC22022PSTAT_BOOL3", true, 9)
               end)
             end
-            ImGui.SameLine(); hangarLoop, used = ImGui.Checkbox("Auto-Fill", hangarLoop, true)
+            ImGui.SameLine(); hangarLoop, used = ImGui.Checkbox("Auto-Fill", hangarLoop)
             if hangarLoop then
               script.run_in_fiber(function(hangarSupp)
                 repeat
@@ -694,7 +288,7 @@ if tonumber(game_version:get_string()) == game_build then
               end
             end)
           end
-          ImGui.SameLine(); ceoLoop, used = ImGui.Checkbox("Auto-Fill##ceo", ceoLoop, true)
+          ImGui.SameLine(); ceoLoop, used = ImGui.Checkbox("Auto-Fill##ceo", ceoLoop)
           if ceoLoop then
             script.run_in_fiber(function(ceoloop)
               repeat
@@ -966,13 +560,13 @@ if tonumber(game_version:get_string()) == game_build then
         --------------------------------------- Fake Cash -------------------------------------------------------------------
         if fCashOwned then
           ImGui.Separator(); ImGui.Text("Fake Cash:"); ImGui.SameLine()
-          cashUpdgrade1, used = ImGui.Checkbox("Equipment Upgrade##cash", cashUpdgrade1, true); ImGui.SameLine()
+          cashUpdgrade1, used = ImGui.Checkbox("Equipment Upgrade##cash", cashUpdgrade1); ImGui.SameLine()
           if used then
-            saveToConfig("cashUpdgrade1", cashUpdgrade1)
+            CFG.save("cashUpdgrade1", cashUpdgrade1)
           end
-          cashUpdgrade2, used = ImGui.Checkbox("Staff Upgrade##cash", cashUpdgrade2, true)
+          cashUpdgrade2, used = ImGui.Checkbox("Staff Upgrade##cash", cashUpdgrade2)
           if used then
-            saveToConfig("cashUpdgrade2", cashUpdgrade2)
+            CFG.save("cashUpdgrade2", cashUpdgrade2)
           end
           if cashUpdgrade1 then
             cashOffset1 = globals.get_int(262145 + 17326)
@@ -995,13 +589,13 @@ if tonumber(game_version:get_string()) == game_build then
         ---------------------------------------Coke----------------------------------------------------------------------
         if cokeOwned then
           ImGui.Separator(); ImGui.Text("Cocaine:    "); ImGui.SameLine()
-          cokeUpdgrade1, used = ImGui.Checkbox("Equipment Upgrade##coke", cokeUpdgrade1, true); ImGui.SameLine()
+          cokeUpdgrade1, used = ImGui.Checkbox("Equipment Upgrade##coke", cokeUpdgrade1); ImGui.SameLine()
           if used then
-            saveToConfig("cokeUpdgrade1", cokeUpdgrade1)
+            CFG.save("cokeUpdgrade1", cokeUpdgrade1)
           end
-          cokeUpdgrade2, used = ImGui.Checkbox("Staff Upgrade##coke", cokeUpdgrade2, true)
+          cokeUpdgrade2, used = ImGui.Checkbox("Staff Upgrade##coke", cokeUpdgrade2)
           if used then
-            saveToConfig("cokeUpdgrade2", cokeUpdgrade2)
+            CFG.save("cokeUpdgrade2", cokeUpdgrade2)
           end
           if cokeUpdgrade1 then
             cokeOffset1 = globals.get_int(262145 + 17327)
@@ -1024,13 +618,13 @@ if tonumber(game_version:get_string()) == game_build then
         if methOwned then
           ImGui.Separator()
           ImGui.Text("Meth:        "); ImGui.SameLine()
-          methUpdgrade1, used = ImGui.Checkbox("Equipment Upgrade##meth", methUpdgrade1, true); ImGui.SameLine()
+          methUpdgrade1, used = ImGui.Checkbox("Equipment Upgrade##meth", methUpdgrade1); ImGui.SameLine()
           if used then
-            saveToConfig("methUpdgrade1", methUpdgrade1)
+            CFG.save("methUpdgrade1", methUpdgrade1)
           end
-          methUpdgrade2, used = ImGui.Checkbox("Staff Upgrade##meth", methUpdgrade2, true)
+          methUpdgrade2, used = ImGui.Checkbox("Staff Upgrade##meth", methUpdgrade2)
           if used then
-            saveToConfig("methUpdgrade2", methUpdgrade2)
+            CFG.save("methUpdgrade2", methUpdgrade2)
           end
           if methUpdgrade1 then
             methOffset1 = globals.get_int(262145 + 17328)
@@ -1053,13 +647,13 @@ if tonumber(game_version:get_string()) == game_build then
         if weedOwned then
           ImGui.Separator()
           ImGui.Text("Weed:       "); ImGui.SameLine()
-          weedUpdgrade1, used = ImGui.Checkbox("Equipment Upgrade##weed", weedUpdgrade1, true); ImGui.SameLine()
+          weedUpdgrade1, used = ImGui.Checkbox("Equipment Upgrade##weed", weedUpdgrade1); ImGui.SameLine()
           if used then
-            saveToConfig("weedUpdgrade1", weedUpdgrade1)
+            CFG.save("weedUpdgrade1", weedUpdgrade1)
           end
-          weedUpdgrade2, used = ImGui.Checkbox("Staff Upgrade##weed", weedUpdgrade2, true)
+          weedUpdgrade2, used = ImGui.Checkbox("Staff Upgrade##weed", weedUpdgrade2)
           if used then
-            saveToConfig("weedUpdgrade2", weedUpdgrade2)
+            CFG.save("weedUpdgrade2", weedUpdgrade2)
           end
           if weedUpdgrade1 then
             weedOffset1 = globals.get_int(262145 + 17329)
@@ -1083,13 +677,13 @@ if tonumber(game_version:get_string()) == game_build then
         if fdOwned then
           ImGui.Separator()
           ImGui.Text("Fake ID:    "); ImGui.SameLine()
-          fdUpdgrade1, used = ImGui.Checkbox("Equipment Upgrade##fd", fdUpdgrade1, true); ImGui.SameLine()
+          fdUpdgrade1, used = ImGui.Checkbox("Equipment Upgrade##fd", fdUpdgrade1); ImGui.SameLine()
           if used then
-            saveToConfig("fdUpdgrade1", fdUpdgrade1)
+            CFG.save("fdUpdgrade1", fdUpdgrade1)
           end
-          fdUpdgrade2, used = ImGui.Checkbox("Staff Upgrade##fd", fdUpdgrade2, true)
+          fdUpdgrade2, used = ImGui.Checkbox("Staff Upgrade##fd", fdUpdgrade2)
           if used then
-            saveToConfig("fdUpdgrade2", fdUpdgrade2)
+            CFG.save("fdUpdgrade2", fdUpdgrade2)
           end
           if fdUpdgrade1 then
             fdOffset1 = globals.get_int(262145 + 17325)
@@ -1112,13 +706,13 @@ if tonumber(game_version:get_string()) == game_build then
         ---------------------------------------Bunker-----------------------------------------------------------------------
         if bunkerOwned then
           ImGui.Separator(); ImGui.Text("Bunker:     "); ImGui.SameLine()
-          bunkerUpdgrade1, used = ImGui.Checkbox("Equipment Upgrade##bunker", bunkerUpdgrade1, true); ImGui.SameLine()
+          bunkerUpdgrade1, used = ImGui.Checkbox("Equipment Upgrade##bunker", bunkerUpdgrade1); ImGui.SameLine()
           if used then
-            saveToConfig("bunkerUpdgrade1", bunkerUpdgrade1)
+            CFG.save("bunkerUpdgrade1", bunkerUpdgrade1)
           end
-          bunkerUpdgrade2, used = ImGui.Checkbox("Staff Upgrade##bunker", bunkerUpdgrade2, true)
+          bunkerUpdgrade2, used = ImGui.Checkbox("Staff Upgrade##bunker", bunkerUpdgrade2)
           if used then
-            saveToConfig("bunkerUpdgrade2", bunkerUpdgrade2)
+            CFG.save("bunkerUpdgrade2", bunkerUpdgrade2)
           end
           if bunkerUpdgrade1 then
             bunkerOffset1 = globals.get_int(262145 + 21256)
@@ -1140,9 +734,9 @@ if tonumber(game_version:get_string()) == game_build then
         ---------------------------------------Acid Lab-------------------------------------------------------------------
         if acidOwned then
           ImGui.Separator(); ImGui.Text("Acid Lab:   "); ImGui.SameLine()
-          acidUpdgrade, used = ImGui.Checkbox("Equipment Upgrade##acid", acidUpdgrade, true)
+          acidUpdgrade, used = ImGui.Checkbox("Equipment Upgrade##acid", acidUpdgrade)
           if used then
-            saveToConfig("acidUpdgrade", acidUpdgrade)
+            CFG.save("acidUpdgrade", acidUpdgrade)
           end
           if acidUpdgrade then
             acidOffset = globals.get_int(262145 + 17330)
