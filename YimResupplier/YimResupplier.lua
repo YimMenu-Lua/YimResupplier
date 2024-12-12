@@ -1,16 +1,13 @@
 ---@diagnostic disable: undefined-global, lowercase-global
 
 SCRIPT_NAME = "YimResupplier"
-local target_build = 3407
-local CFG = require("YimConfig")
-local function getGameBuild()
-  local game_version = memory.scan_pattern("8B C3 33 D2 C6 44 24 20"):add(0x24):rip()
-  return tonumber(game_version:get_string())
-end
+local TAGET_BUILD <const> = "3407"
+local CFG = require("includes/YimConfig")
+require("includes/yr_utils")
 
-if getGameBuild() == target_build then
-  yim_resupplier        = gui.get_tab("YimResupplier")
-  DEFAULT_CONFIG        = {
+if GetBuildNumber() == TAGET_BUILD then
+  yim_resupplier = gui.add_tab("YimResupplier")
+  DEFAULT_CONFIG = {
     cashUpdgrade1   = false,
     cashUpdgrade2   = false,
     cokeUpdgrade1   = false,
@@ -41,6 +38,7 @@ if getGameBuild() == target_build then
   local fdTotal         = 0
   local bunkerTotal     = 0
   local acidTotal       = 0
+  local main_global     = 1667995
   local cashUpdgrade1   = CFG.read("cashUpdgrade1")
   local cashUpdgrade2   = CFG.read("cashUpdgrade2")
   local cokeUpdgrade1   = CFG.read("cokeUpdgrade1")
@@ -54,187 +52,32 @@ if getGameBuild() == target_build then
   local bunkerUpdgrade1 = CFG.read("bunkerUpdgrade1")
   local bunkerUpdgrade2 = CFG.read("bunkerUpdgrade2")
   local acidUpdgrade    = CFG.read("acidUpdgrade")
-  local function formatMoney(value)
-    return "$" .. tostring(value):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
-  end
-  local function coloredText(text, wrap_size, color)
-    ImGui.PushStyleColor(ImGuiCol.Text, color[1] / 255, color[2] / 255, color[3] / 255, color[4])
-    ImGui.PushTextWrapPos(ImGui.GetFontSize() * wrap_size)
-    ImGui.TextWrapped(text)
-    ImGui.PopTextWrapPos()
-    ImGui.PopStyleColor(1)
-  end
-  ---@param keepVehicle boolean
-  ---@param setHeading boolean
-  ---@param coords any
-  ---@param heading? integer
-  local function selfTP(keepVehicle, setHeading, coords, heading)
-    script.run_in_fiber(function(selftp)
-      STREAMING.REQUEST_COLLISION_AT_COORD(coords.x, coords.y, coords.z)
-      selftp:sleep(300)
-      if setHeading then
-        if heading == nil then
-          heading = 0
-        end
-        ENTITY.SET_ENTITY_HEADING(self.get_ped(), heading)
-      end
-      if keepVehicle then
-        PED.SET_PED_COORDS_KEEP_VEHICLE(self.get_ped(), coords.x, coords.y, coords.z)
-      else
-        TASK.CLEAR_PED_TASKS_IMMEDIATELY(self.get_ped())
-        ENTITY.SET_ENTITY_COORDS(self.get_ped(), coords.x, coords.y, coords.z, false, false, false, true)
-      end
-    end)
-  end
-
-  --[[
-      -- useless
-  local function totalCEOsupplies()
-    local s_T = {}
-    local n   = 0
-    local t_s = 0
-    while n < 5 do
-      local value = stats.get_int("MP" .. stats.get_character_index() .. "_CONTOTALFORWHOUSE" .. tostring(n))
-      n = n + 1
-      table.insert(s_T, value)
-    end
-    for _, v in pairs(s_T) do
-      t_s = t_s + v
-    end
-    return t_s
-  end
-  ]]
-
-  local function getCEOvalue_G(crates)
-    local G
-    if crates ~= nil then
-      if crates == 1 then
-        G = 15732
-      end
-      if crates == 2 then
-        G = 15733
-      end
-      if crates == 3 then
-        G = 15734
-      end
-      if crates == 4 or crates == 5 then
-        G = 15735
-      end
-      if crates == 6 or crates == 7 then
-        G = 15736
-      end
-      if crates == 8 or crates == 9 then
-        G = 15737
-      end
-      if crates >= 10 and crates <= 14 then
-        G = 15738
-      end
-      if crates >= 15 and crates <= 19 then
-        G = 15739
-      end
-      if crates >= 20 and crates <= 24 then
-        G = 15740
-      end
-      if crates >= 25 and crates <= 29 then
-        G = 15741
-      end
-      if crates >= 30 and crates <= 34 then
-        G = 15742
-      end
-      if crates >= 35 and crates <= 39 then
-        G = 15743
-      end
-      if crates >= 40 and crates <= 44 then
-        G = 15744
-      end
-      if crates >= 45 and crates <= 49 then
-        G = 15745
-      end
-      if crates >= 50 and crates <= 59 then
-        G = 15746
-      end
-      if crates >= 60 and crates <= 69 then
-        G = 15747
-      end
-      if crates >= 70 and crates <= 79 then
-        G = 15748
-      end
-      if crates >= 80 and crates <= 89 then
-        G = 15749
-      end
-      if crates >= 90 and crates <= 99 then
-        G = 15750
-      end
-      if crates >= 100 and crates <= 110 then
-        G = 15751
-      end
-      if crates == 111 then
-        G = 15752
-      end
-    else
-      G = 0
-    end
-    return G
-  end
 
   yim_resupplier:add_imgui(function()
-    if NETWORK.NETWORK_IS_SESSION_STARTED() then
-      local MPx = "MP" .. stats.get_character_index()
-      if stats.get_int(MPx .. "_PROP_HANGAR") ~= 0 then
-        hangarOwned = true
-      else
-        hangarOwned = false
-      end
-      if stats.get_int(MPx .. "_PROP_FAC_SLOT0") ~= 0 then
-        fCashOwned = true
-      else
-        fCashOwned = false
-      end
-      if stats.get_int(MPx .. "_PROP_FAC_SLOT1") ~= 0 then
-        cokeOwned = true
-      else
-        cokeOwned = false
-      end
-      if stats.get_int(MPx .. "_PROP_FAC_SLOT2") ~= 0 then
-        methOwned = true
-      else
-        methOwned = false
-      end
-      if stats.get_int(MPx .. "_PROP_FAC_SLOT3") ~= 0 then
-        weedOwned = true
-      else
-        weedOwned = false
-      end
-      if stats.get_int(MPx .. "_PROP_FAC_SLOT4") ~= 0 then
-        fdOwned = true
-      else
-        fdOwned = false
-      end
-      if stats.get_int(MPx .. "_PROP_FAC_SLOT5") ~= 0 then
-        bunkerOwned = true
-      else
-        bunkerOwned = false
-      end
-      if stats.get_int(MPx .. "_PROP_FAC_SLOT6") ~= 0 then
-        acidOwned = true
-      else
-        acidOwned = false
-      end
+    if network.is_session_started() and not script.is_active("maintransition") then
+      hangarOwned = stats.get_int("MPX_PROP_HANGAR") ~= 0
+      fCashOwned  = stats.get_int("MPX_PROP_FAC_SLOT0") ~= 0
+      cokeOwned   = stats.get_int("MPX_PROP_FAC_SLOT1") ~= 0
+      methOwned   = stats.get_int("MPX_PROP_FAC_SLOT2") ~= 0
+      weedOwned   = stats.get_int("MPX_PROP_FAC_SLOT3") ~= 0
+      fdOwned     = stats.get_int("MPX_PROP_FAC_SLOT4") ~= 0
+      bunkerOwned = stats.get_int("MPX_PROP_FAC_SLOT5") ~= 0
+      acidOwned   = stats.get_int("MPX_PROP_FAC_SLOT6") ~= 0
       ImGui.BeginTabBar("YimResupplier", ImGuiTabBarFlags.None)
       if ImGui.BeginTabItem("Manage Supplies") then
-        local wh1Supplies  = stats.get_int(MPx .. "_CONTOTALFORWHOUSE0")
-        local wh2Supplies  = stats.get_int(MPx .. "_CONTOTALFORWHOUSE1")
-        local wh3Supplies  = stats.get_int(MPx .. "_CONTOTALFORWHOUSE2")
-        local wh4Supplies  = stats.get_int(MPx .. "_CONTOTALFORWHOUSE3")
-        local wh5Supplies  = stats.get_int(MPx .. "_CONTOTALFORWHOUSE4")
-        local hangarSupply = stats.get_int(MPx .. "_HANGAR_CONTRABAND_TOTAL")
-        local cashSupply   = stats.get_int(MPx .. "_MATTOTALFORFACTORY0")
-        local dfSupply     = stats.get_int(MPx .. "_MATTOTALFORFACTORY1")
-        local methSupply   = stats.get_int(MPx .. "_MATTOTALFORFACTORY2")
-        local weedSupply   = stats.get_int(MPx .. "_MATTOTALFORFACTORY3")
-        local cokeSupply   = stats.get_int(MPx .. "_MATTOTALFORFACTORY4")
-        local bunkerSupply = stats.get_int(MPx .. "_MATTOTALFORFACTORY5")
-        local acidSupply   = stats.get_int(MPx .. "_MATTOTALFORFACTORY6")
+        local wh1Supplies  = stats.get_int("MPX_CONTOTALFORWHOUSE0")
+        local wh2Supplies  = stats.get_int("MPX_CONTOTALFORWHOUSE1")
+        local wh3Supplies  = stats.get_int("MPX_CONTOTALFORWHOUSE2")
+        local wh4Supplies  = stats.get_int("MPX_CONTOTALFORWHOUSE3")
+        local wh5Supplies  = stats.get_int("MPX_CONTOTALFORWHOUSE4")
+        local hangarSupply = stats.get_int("MPX_HANGAR_CONTRABAND_TOTAL")
+        local cashSupply   = stats.get_int("MPX_MATTOTALFORFACTORY0")
+        local dfSupply     = stats.get_int("MPX_MATTOTALFORFACTORY1")
+        local methSupply   = stats.get_int("MPX_MATTOTALFORFACTORY2")
+        local weedSupply   = stats.get_int("MPX_MATTOTALFORFACTORY3")
+        local cokeSupply   = stats.get_int("MPX_MATTOTALFORFACTORY4")
+        local bunkerSupply = stats.get_int("MPX_MATTOTALFORFACTORY5")
+        local acidSupply   = stats.get_int("MPX_MATTOTALFORFACTORY6")
         local ceoSupply    = (wh1Supplies + wh2Supplies + wh3Supplies + wh4Supplies + wh5Supplies)
         ImGui.Spacing(); ImGui.Text("Hangar Cargo"); ImGui.Separator()
         if hangarOwned then
@@ -243,14 +86,14 @@ if getGameBuild() == target_build then
           if hangarSupply < 50 then
             if ImGui.Button("Source Random Crate(s)") then
               script.run_in_fiber(function()
-                stats.set_bool_masked(MPx .. "_DLC22022PSTAT_BOOL3", true, 9)
+                stats.set_bool_masked("MPX_DLC22022PSTAT_BOOL3", true, 9)
               end)
             end
             ImGui.SameLine(); hangarLoop, used = ImGui.Checkbox("Auto-Fill", hangarLoop)
             if hangarLoop then
               script.run_in_fiber(function(hangarSupp)
                 repeat
-                  stats.set_bool_masked(MPx .. "_DLC22022PSTAT_BOOL3", true, 9)
+                  stats.set_bool_masked("MPX_DLC22022PSTAT_BOOL3", true, 9)
                   hangarSupp:sleep(969) -- add a delay to prevent transaction error or infinite 'transaction pending'
                 until
                   hangarSupply == 50 or hangarLoop == false
@@ -283,7 +126,7 @@ if getGameBuild() == target_build then
           if ImGui.Button("Source Random Crate(s)##ceo") then
             script.run_in_fiber(function(fillceo)
               for i = 12, 16 do
-                stats.set_bool_masked(MPx .. "_FIXERPSTAT_BOOL1", true, i)
+                stats.set_bool_masked("MPX_FIXERPSTAT_BOOL1", true, i)
                 fillceo:sleep(500) -- half second delay between each warehouse
               end
             end)
@@ -293,7 +136,7 @@ if getGameBuild() == target_build then
             script.run_in_fiber(function(ceoloop)
               repeat
                 for i = 12, 16 do
-                  stats.set_bool_masked(MPx .. "_FIXERPSTAT_BOOL1", true, i)
+                  stats.set_bool_masked("MPX_FIXERPSTAT_BOOL1", true, i)
                   ceoloop:sleep(500) -- half second delay between each warehouse
                 end
                 ceoloop:sleep(969)   -- add a delay to prevent transaction error or infinite 'transaction pending'
@@ -325,7 +168,7 @@ if getGameBuild() == target_build then
           if math.ceil(cashSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##FakeCash") then
-              globals.set_int(1667995 + 0 + 1, 1)
+              globals.set_int(main_global + 0 + 1, 1)
             end
             ImGui.SameLine(); ImGui.Dummy(5, 1)
           end
@@ -351,7 +194,7 @@ if getGameBuild() == target_build then
           if math.ceil(cokeSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##Cocaine") then
-              globals.set_int(1667995 + 4 + 1, 1)
+              globals.set_int(main_global + 4 + 1, 1)
             end
             ImGui.SameLine(); ImGui.Dummy(5, 1)
           end
@@ -377,7 +220,7 @@ if getGameBuild() == target_build then
           if math.ceil(methSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##Meth") then
-              globals.set_int(1667995 + 2 + 1, 1)
+              globals.set_int(main_global + 2 + 1, 1)
             end
             ImGui.SameLine(); ImGui.Dummy(5, 1)
           end
@@ -403,7 +246,7 @@ if getGameBuild() == target_build then
           if math.ceil(weedSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##Weed") then
-              globals.set_int(1667995 + 3 + 1, 1)
+              globals.set_int(main_global + 3 + 1, 1)
             end
             ImGui.SameLine(); ImGui.Dummy(5, 1)
           end
@@ -428,7 +271,7 @@ if getGameBuild() == target_build then
           if math.ceil(dfSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##DocumentForgery") then
-              globals.set_int(1667995 + 1 + 1, 1)
+              globals.set_int(main_global + 1 + 1, 1)
             end
             ImGui.SameLine(); ImGui.Dummy(5, 1)
           end
@@ -454,7 +297,7 @@ if getGameBuild() == target_build then
           if math.ceil(bunkerSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##Bunker") then
-              globals.set_int(1667995 + 5 + 1, 1)
+              globals.set_int(main_global + 5 + 1, 1)
             end
             ImGui.SameLine(); ImGui.Dummy(5, 1)
           end
@@ -480,7 +323,7 @@ if getGameBuild() == target_build then
           if math.ceil(acidSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##AcidLab") then
-              globals.set_int(1667995 + 6 + 1, 1)
+              globals.set_int(main_global + 6 + 1, 1)
             end
             ImGui.SameLine(); ImGui.Dummy(5, 1)
           end
@@ -510,7 +353,7 @@ if getGameBuild() == target_build then
         --------------------------------------- Hangar ----------------------------------------------------------------------
         if hangarOwned then
           ImGui.Text("Hangar:")
-          local hangarCargo = stats.get_int(MPx .. "_HANGAR_CONTRABAND_TOTAL")
+          local hangarCargo = stats.get_int("MPX_HANGAR_CONTRABAND_TOTAL")
           hangarTotal = hangarCargo * 30000
           ImGui.Text("Product:"); ImGui.SameLine(); ImGui.Dummy(5, 1); ImGui.SameLine(); ImGui.ProgressBar(
             (hangarCargo / 50), 160, 25, tostring(hangarCargo) ..
@@ -520,11 +363,11 @@ if getGameBuild() == target_build then
         end
         --------------------------------------- CEO ----------------------------------------------------------------------
         ImGui.Separator(); ImGui.Text("CEO:")
-        local wh1Supplies = stats.get_int(MPx .. "_CONTOTALFORWHOUSE0")
-        local wh2Supplies = stats.get_int(MPx .. "_CONTOTALFORWHOUSE1")
-        local wh3Supplies = stats.get_int(MPx .. "_CONTOTALFORWHOUSE2")
-        local wh4Supplies = stats.get_int(MPx .. "_CONTOTALFORWHOUSE3")
-        local wh5Supplies = stats.get_int(MPx .. "_CONTOTALFORWHOUSE4")
+        local wh1Supplies = stats.get_int("MPX_CONTOTALFORWHOUSE0")
+        local wh2Supplies = stats.get_int("MPX_CONTOTALFORWHOUSE1")
+        local wh3Supplies = stats.get_int("MPX_CONTOTALFORWHOUSE2")
+        local wh4Supplies = stats.get_int("MPX_CONTOTALFORWHOUSE3")
+        local wh5Supplies = stats.get_int("MPX_CONTOTALFORWHOUSE4")
         if wh1Supplies ~= nil and wh1Supplies > 0 then
           wh1Value = (globals.get_int(262145 + (getCEOvalue_G(wh1Supplies))))
         else
@@ -578,7 +421,7 @@ if getGameBuild() == target_build then
           else
             cashOffset2 = 0
           end
-          local cashProduct = stats.get_int(MPx .. "_PRODTOTALFORFACTORY0")
+          local cashProduct = stats.get_int("MPX_PRODTOTALFORFACTORY0")
           cashTotal = ((globals.get_int(262145 + 17320) + cashOffset1 + cashOffset2) * cashProduct)
           ImGui.Text("Product:"); ImGui.SameLine(); ImGui.Dummy(5, 1); ImGui.SameLine(); ImGui.ProgressBar(
             (cashProduct / 40), 160, 25, tostring(cashProduct) .. " Boxes (" ..
@@ -607,7 +450,7 @@ if getGameBuild() == target_build then
           else
             cokeOffset2 = 0
           end
-          local cokeProduct = stats.get_int(MPx .. "_PRODTOTALFORFACTORY1")
+          local cokeProduct = stats.get_int("MPX_PRODTOTALFORFACTORY1")
           cokeTotal = ((globals.get_int(262145 + 17321) + cokeOffset1 + cokeOffset2) * cokeProduct)
           ImGui.Text("Product:"); ImGui.SameLine(); ImGui.Dummy(5, 1); ImGui.SameLine(); ImGui.ProgressBar(
             (cokeProduct / 10), 160, 25, tostring(cokeProduct) .. " Kilos (" .. tostring(cokeProduct * 10) .. "%)")
@@ -636,7 +479,7 @@ if getGameBuild() == target_build then
           else
             methOffset2 = 0
           end
-          local methProduct = stats.get_int(MPx .. "_PRODTOTALFORFACTORY2")
+          local methProduct = stats.get_int("MPX_PRODTOTALFORFACTORY2")
           methTotal = ((globals.get_int(262145 + 17322) + methOffset1 + methOffset2) * methProduct)
           ImGui.Text("Product:"); ImGui.SameLine(); ImGui.Dummy(5, 1); ImGui.SameLine(); ImGui.ProgressBar(
             (methProduct / 20), 160, 25, tostring(methProduct) .. " Pounds (" .. tostring(methProduct * 5) .. "%)")
@@ -665,7 +508,7 @@ if getGameBuild() == target_build then
           else
             weedOffset2 = 0
           end
-          local weedProduct = stats.get_int(MPx .. "_PRODTOTALFORFACTORY3")
+          local weedProduct = stats.get_int("MPX_PRODTOTALFORFACTORY3")
           weedTotal = ((globals.get_int(262145 + 17323) + weedOffset1 + weedOffset2) * weedProduct)
           ImGui.Text("Product:"); ImGui.SameLine(); ImGui.Dummy(5, 1); ImGui.SameLine(); ImGui.ProgressBar(
             (weedProduct / 80), 160, 25,
@@ -695,7 +538,7 @@ if getGameBuild() == target_build then
           else
             fdOffset2 = 0
           end
-          local fdProduct = stats.get_int(MPx .. "_PRODTOTALFORFACTORY4")
+          local fdProduct = stats.get_int("MPX_PRODTOTALFORFACTORY4")
           fdTotal = ((globals.get_int(262145 + 17319) + fdOffset1 + fdOffset2) * fdProduct)
           ImGui.Text("Product:"); ImGui.SameLine(); ImGui.Dummy(5, 1); ImGui.SameLine(); ImGui.ProgressBar(
             (fdProduct / 60), 160, 25, tostring(fdProduct) .. " Boxes (" .. tostring(math.floor(fdProduct / 6 * 10)) ..
@@ -724,7 +567,7 @@ if getGameBuild() == target_build then
           else
             bunkerOffset2 = 0
           end
-          local bunkerProduct = stats.get_int(MPx .. "_PRODTOTALFORFACTORY5")
+          local bunkerProduct = stats.get_int("MPX_PRODTOTALFORFACTORY5")
           bunkerTotal = ((globals.get_int(262145 + 21254) + bunkerOffset1 + bunkerOffset2) * bunkerProduct)
           ImGui.Text("Product:"); ImGui.SameLine(); ImGui.Dummy(5, 1); ImGui.SameLine(); ImGui.ProgressBar(
             (bunkerProduct / 100), 160, 25, tostring(bunkerProduct) .. " Crates (" .. tostring(bunkerProduct) .. "%)")
@@ -743,7 +586,7 @@ if getGameBuild() == target_build then
           else
             acidOffset = 0
           end
-          local acidProduct = stats.get_int(MPx .. "_PRODTOTALFORFACTORY6")
+          local acidProduct = stats.get_int("MPX_PRODTOTALFORFACTORY6")
           acidTotal = ((globals.get_int(262145 + 17324) + acidOffset) * acidProduct)
           ImGui.Text("Product:"); ImGui.SameLine(); ImGui.Dummy(5, 1); ImGui.SameLine(); ImGui.ProgressBar(
             (acidProduct / 100), 160, 25,
@@ -757,7 +600,7 @@ if getGameBuild() == target_build then
         ImGui.EndTabItem()
       end
       if ImGui.BeginTabItem("Business Safes") then
-        if stats.get_int(MPx .. "_PROP_NIGHTCLUB") ~= 0 then
+        if stats.get_int("MPX_PROP_NIGHTCLUB") ~= 0 then
           ImGui.Spacing(); ImGui.Spacing(); ImGui.Text("¤ Nightclub ¤")
           if INTERIOR.GET_INTERIOR_FROM_ENTITY(self.get_ped()) == 0 then
             ImGui.SameLine(); ImGui.Dummy(50, 1); ImGui.SameLine()
@@ -772,22 +615,22 @@ if getGameBuild() == target_build then
               end)
             end
           end
-          local currentNcPop = stats.get_int(MPx .. "_CLUB_POPULARITY")
+          local currentNcPop = stats.get_int("MPX_CLUB_POPULARITY")
           local popDiff = 1000 - currentNcPop
-          local currNcSafeMoney = stats.get_int(MPx .. "_CLUB_SAFE_CASH_VALUE")
+          local currNcSafeMoney = stats.get_int("MPX_CLUB_SAFE_CASH_VALUE")
           ImGui.Text("Popularity: "); ImGui.SameLine(); ImGui.Dummy(35, 1); ImGui.SameLine(); ImGui.ProgressBar(
             currentNcPop / 1000, 160, 25, tostring(currentNcPop))
           if currentNcPop < 1000 then
             ImGui.SameLine()
             if ImGui.Button("Max Popularity") then
-              stats.set_int(MPx .. "_CLUB_POPULARITY", currentNcPop + popDiff)
+              stats.set_int("MPX_CLUB_POPULARITY", currentNcPop + popDiff)
               gui.show_success("YimResupplier", "Nightclub popularity increased.")
             end
           end
           ImGui.Text("Safe: "); ImGui.SameLine(); ImGui.Dummy(75, 1); ImGui.SameLine(); ImGui.ProgressBar(
             currNcSafeMoney / 250000, 160, 25, formatMoney(currNcSafeMoney)); ImGui.Separator()
         end
-        if stats.get_int(MPx .. "_PROP_ARCADE") ~= 0 then
+        if stats.get_int("MPX_PROP_ARCADE") ~= 0 then
           ImGui.Spacing(); ImGui.Spacing(); ImGui.Text("¤ Arcade ¤")
           if INTERIOR.GET_INTERIOR_FROM_ENTITY(self.get_ped()) == 0 then
             ImGui.SameLine(); ImGui.Dummy(60, 1); ImGui.SameLine()
@@ -802,12 +645,12 @@ if getGameBuild() == target_build then
               end)
             end
           end
-          local currArSafeMoney = stats.get_int(MPx .. "_ARCADE_SAFE_CASH_VALUE")
+          local currArSafeMoney = stats.get_int("MPX_ARCADE_SAFE_CASH_VALUE")
           ImGui.Text("Safe: ")
           ImGui.SameLine(); ImGui.Dummy(75, 1); ImGui.SameLine(); ImGui.ProgressBar(currArSafeMoney / 100000, 160, 25,
             formatMoney(currArSafeMoney)); ImGui.Separator()
         end
-        if stats.get_int(MPx .. "_PROP_SECURITY_OFFICE") ~= 0 then
+        if stats.get_int("MPX_PROP_SECURITY_OFFICE") ~= 0 then
           ImGui.Spacing(); ImGui.Spacing(); ImGui.Text("¤ Agency ¤")
           if INTERIOR.GET_INTERIOR_FROM_ENTITY(self.get_ped()) == 0 then
             ImGui.SameLine(); ImGui.Dummy(60, 1); ImGui.SameLine()
@@ -822,11 +665,11 @@ if getGameBuild() == target_build then
               end)
             end
           end
-          local currAgSafeMoney = stats.get_int(MPx .. "_FIXER_SAFE_CASH_VALUE")
+          local currAgSafeMoney = stats.get_int("MPX_FIXER_SAFE_CASH_VALUE")
           ImGui.Text("Safe: "); ImGui.SameLine(); ImGui.Dummy(75, 1); ImGui.SameLine(); ImGui.ProgressBar(
             currAgSafeMoney / 250000, 160, 25, formatMoney(currAgSafeMoney)); ImGui.Separator()
         end
-        if stats.get_int(MPx .. "_PROP_CLUBHOUSE") ~= 0 then
+        if stats.get_int("MPX_PROP_CLUBHOUSE") ~= 0 then
           ImGui.Spacing(); ImGui.Spacing(); ImGui.Text("¤ MC Clubhouse ¤")
           if INTERIOR.GET_INTERIOR_FROM_ENTITY(self.get_ped()) == 0 then
             ImGui.SameLine(); ImGui.Dummy(10, 1); ImGui.SameLine()
@@ -841,11 +684,11 @@ if getGameBuild() == target_build then
               end)
             end
           end
-          local currClubHouseBarProfit = stats.get_int(MPx .. "_BIKER_BAR_RESUPPLY_CASH")
+          local currClubHouseBarProfit = stats.get_int("MPX_BIKER_BAR_RESUPPLY_CASH")
           ImGui.Text("Bar Earnings: "); ImGui.SameLine(); ImGui.Dummy(15, 1); ImGui.SameLine(); ImGui.ProgressBar(
             currClubHouseBarProfit / 100000, 160, 25, formatMoney(currClubHouseBarProfit)); ImGui.Separator()
         end
-        if stats.get_int(MPx .. "_PROP_BAIL_OFFICE") ~= 0 then
+        if stats.get_int("MPX_PROP_BAIL_OFFICE") ~= 0 then
           ImGui.Spacing(); ImGui.Spacing(); ImGui.Text("¤ Bail Office ¤")
           if INTERIOR.GET_INTERIOR_FROM_ENTITY(self.get_ped()) == 0 then
             ImGui.SameLine(); ImGui.Dummy(40, 1); ImGui.SameLine()
@@ -861,11 +704,11 @@ if getGameBuild() == target_build then
               end)
             end
           end
-          local currBailSafe = stats.get_int(MPx .. "_BAIL_SAFE_CASH_VALUE")
+          local currBailSafe = stats.get_int("MPX_BAIL_SAFE_CASH_VALUE")
           ImGui.Text("Safe: "); ImGui.SameLine(); ImGui.Dummy(75, 1); ImGui.SameLine(); ImGui.ProgressBar(
             currBailSafe / 100000, 160, 25, formatMoney(currBailSafe)); ImGui.Separator()
         end
-        if stats.get_int(MPx .. "_SALVAGE_YARD_OWNED") ~= 0 then
+        if stats.get_int("MPX_SALVAGE_YARD_OWNED") ~= 0 then
           ImGui.Spacing(); ImGui.Spacing(); ImGui.Text("¤ Salvage Yard ¤")
           if INTERIOR.GET_INTERIOR_FROM_ENTITY(self.get_ped()) == 0 then
             ImGui.SameLine(); ImGui.Dummy(20, 1); ImGui.SameLine()
@@ -880,7 +723,7 @@ if getGameBuild() == target_build then
               end)
             end
           end
-          local currSalvSafe = stats.get_int(MPx .. "_SALVAGE_SAFE_CASH_VALUE")
+          local currSalvSafe = stats.get_int("MPX_SALVAGE_SAFE_CASH_VALUE")
           ImGui.Text("Safe: "); ImGui.SameLine(); ImGui.Dummy(75, 1); ImGui.SameLine(); ImGui.ProgressBar(
             currSalvSafe / 250000, 160, 25, formatMoney(currSalvSafe))
         end
@@ -895,7 +738,7 @@ if getGameBuild() == target_build then
     end
   end)
 else
-  gui.show_warning("YimResupplier", "YimResupplier is not up-to-date.\nPlease update the script!")
-  yim_resupplier = gui.get_tab("YimResupplier")
-  yim_resupplier:add_text("YimResupplier is not up-to-date.\n\nPlease update the script.")
+  gui.show_warning("YimResupplier", "YimResupplier is outdated.\nPlease update the script!")
+  yim_resupplier = gui.add_tab("YimResupplier")
+  yim_resupplier:add_text("YimResupplier is outdated.\n\nPlease update the script.")
 end
