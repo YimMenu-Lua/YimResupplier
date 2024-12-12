@@ -1,7 +1,7 @@
 ---@diagnostic disable: undefined-global, lowercase-global
 
 SCRIPT_NAME = "YimResupplier"
-local target_build = 3351
+local target_build = 3407
 local CFG = require("YimConfig")
 local function getGameBuild()
   local game_version = memory.scan_pattern("8B C3 33 D2 C6 44 24 20"):add(0x24):rip()
@@ -325,7 +325,7 @@ if getGameBuild() == target_build then
           if math.ceil(cashSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##FakeCash") then
-              globals.set_int(1663174 + 0 + 1, 1)
+              globals.set_int(1667995 + 0 + 1, 1)
             end
             ImGui.SameLine(); ImGui.Dummy(5, 1)
           end
@@ -351,7 +351,7 @@ if getGameBuild() == target_build then
           if math.ceil(cokeSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##Cocaine") then
-              globals.set_int(1663174 + 4 + 1, 1)
+              globals.set_int(1667995 + 4 + 1, 1)
             end
             ImGui.SameLine(); ImGui.Dummy(5, 1)
           end
@@ -377,7 +377,7 @@ if getGameBuild() == target_build then
           if math.ceil(methSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##Meth") then
-              globals.set_int(1663174 + 2 + 1, 1)
+              globals.set_int(1667995 + 2 + 1, 1)
             end
             ImGui.SameLine(); ImGui.Dummy(5, 1)
           end
@@ -403,7 +403,7 @@ if getGameBuild() == target_build then
           if math.ceil(weedSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##Weed") then
-              globals.set_int(1663174 + 3 + 1, 1)
+              globals.set_int(1667995 + 3 + 1, 1)
             end
             ImGui.SameLine(); ImGui.Dummy(5, 1)
           end
@@ -428,7 +428,7 @@ if getGameBuild() == target_build then
           if math.ceil(dfSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##DocumentForgery") then
-              globals.set_int(1663174 + 1 + 1, 1)
+              globals.set_int(1667995 + 1 + 1, 1)
             end
             ImGui.SameLine(); ImGui.Dummy(5, 1)
           end
@@ -454,7 +454,7 @@ if getGameBuild() == target_build then
           if math.ceil(bunkerSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##Bunker") then
-              globals.set_int(1663174 + 5 + 1, 1)
+              globals.set_int(1667995 + 5 + 1, 1)
             end
             ImGui.SameLine(); ImGui.Dummy(5, 1)
           end
@@ -480,7 +480,7 @@ if getGameBuild() == target_build then
           if math.ceil(acidSupply) < 100 then
             ImGui.SameLine()
             if ImGui.Button(" Fill ##AcidLab") then
-              globals.set_int(1663174 + 6 + 1, 1)
+              globals.set_int(1667995 + 6 + 1, 1)
             end
             ImGui.SameLine(); ImGui.Dummy(5, 1)
           end
