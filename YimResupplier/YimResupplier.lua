@@ -1,7 +1,7 @@
 ---@diagnostic disable: undefined-global, lowercase-global
 
 SCRIPT_NAME = "YimResupplier"
-local TAGET_BUILD <const> = "3407"
+local TAGET_BUILD <const> = "3411"
 local CFG = require("includes/YimConfig")
 require("includes/yr_utils")
 
