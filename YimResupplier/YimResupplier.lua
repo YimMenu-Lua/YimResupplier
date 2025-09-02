@@ -1,7 +1,7 @@
 ---@diagnostic disable: undefined-global, lowercase-global
 
 SCRIPT_NAME = "YimResupplier"
-local TAGET_BUILD <const> = "3411"
+local TAGET_BUILD <const> = "3586.0"
 local CFG = require("includes/YimConfig")
 require("includes/yr_utils")
 
@@ -38,7 +38,7 @@ if GetBuildNumber() == TAGET_BUILD then
   local fdTotal         = 0
   local bunkerTotal     = 0
   local acidTotal       = 0
-  local main_global     = 1667995
+  local main_global     = 1668000
   local cashUpdgrade1   = CFG.read("cashUpdgrade1")
   local cashUpdgrade2   = CFG.read("cashUpdgrade2")
   local cokeUpdgrade1   = CFG.read("cokeUpdgrade1")
