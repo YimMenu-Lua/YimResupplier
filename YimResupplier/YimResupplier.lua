@@ -412,17 +412,17 @@ if GetBuildNumber() == TAGET_BUILD then
             CFG.save("cashUpdgrade2", cashUpdgrade2)
           end
           if cashUpdgrade1 then
-            cashOffset1 = globals.get_int(262145 + 17326)
+            cashOffset1 = globals.get_int(262145 + 17415)
           else
             cashOffset1 = 0
           end
           if cashUpdgrade2 then
-            cashOffset2 = globals.get_int(262145 + 17332)
+            cashOffset2 = globals.get_int(262145 + 17421)
           else
             cashOffset2 = 0
           end
           local cashProduct = stats.get_int("MPX_PRODTOTALFORFACTORY0")
-          cashTotal = ((globals.get_int(262145 + 17320) + cashOffset1 + cashOffset2) * cashProduct)
+          cashTotal = ((globals.get_int(262145 + 17409) + cashOffset1 + cashOffset2) * cashProduct)
           ImGui.Text("Product:"); ImGui.SameLine(); ImGui.Dummy(5, 1); ImGui.SameLine(); ImGui.ProgressBar(
             (cashProduct / 40), 160, 25, tostring(cashProduct) .. " Boxes (" ..
             tostring(math.floor(cashProduct * 2.5)) .. "%)")
@@ -441,17 +441,17 @@ if GetBuildNumber() == TAGET_BUILD then
             CFG.save("cokeUpdgrade2", cokeUpdgrade2)
           end
           if cokeUpdgrade1 then
-            cokeOffset1 = globals.get_int(262145 + 17327)
+            cokeOffset1 = globals.get_int(262145 + 17416)
           else
             cokeOffset1 = 0
           end
           if cokeUpdgrade2 then
-            cokeOffset2 = globals.get_int(262145 + 17333)
+            cokeOffset2 = globals.get_int(262145 + 17422)
           else
             cokeOffset2 = 0
           end
           local cokeProduct = stats.get_int("MPX_PRODTOTALFORFACTORY1")
-          cokeTotal = ((globals.get_int(262145 + 17321) + cokeOffset1 + cokeOffset2) * cokeProduct)
+          cokeTotal = ((globals.get_int(262145 + 17410) + cokeOffset1 + cokeOffset2) * cokeProduct)
           ImGui.Text("Product:"); ImGui.SameLine(); ImGui.Dummy(5, 1); ImGui.SameLine(); ImGui.ProgressBar(
             (cokeProduct / 10), 160, 25, tostring(cokeProduct) .. " Kilos (" .. tostring(cokeProduct * 10) .. "%)")
           ImGui.SameLine(); ImGui.Dummy(10, 1); ImGui.SameLine(); ImGui.Text("Value:")
@@ -470,17 +470,17 @@ if GetBuildNumber() == TAGET_BUILD then
             CFG.save("methUpdgrade2", methUpdgrade2)
           end
           if methUpdgrade1 then
-            methOffset1 = globals.get_int(262145 + 17328)
+            methOffset1 = globals.get_int(262145 + 17417)
           else
             methOffset1 = 0
           end
           if methUpdgrade2 then
-            methOffset2 = globals.get_int(262145 + 17334)
+            methOffset2 = globals.get_int(262145 + 17423)
           else
             methOffset2 = 0
           end
           local methProduct = stats.get_int("MPX_PRODTOTALFORFACTORY2")
-          methTotal = ((globals.get_int(262145 + 17322) + methOffset1 + methOffset2) * methProduct)
+          methTotal = ((globals.get_int(262145 + 17411) + methOffset1 + methOffset2) * methProduct)
           ImGui.Text("Product:"); ImGui.SameLine(); ImGui.Dummy(5, 1); ImGui.SameLine(); ImGui.ProgressBar(
             (methProduct / 20), 160, 25, tostring(methProduct) .. " Pounds (" .. tostring(methProduct * 5) .. "%)")
           ImGui.SameLine(); ImGui.Dummy(10, 1); ImGui.SameLine(); ImGui.Text("Value:"); ImGui.SameLine()
@@ -499,17 +499,17 @@ if GetBuildNumber() == TAGET_BUILD then
             CFG.save("weedUpdgrade2", weedUpdgrade2)
           end
           if weedUpdgrade1 then
-            weedOffset1 = globals.get_int(262145 + 17329)
+            weedOffset1 = globals.get_int(262145 + 17418)
           else
             weedOffset1 = 0
           end
           if weedUpdgrade2 then
-            weedOffset2 = globals.get_int(262145 + 17335)
+            weedOffset2 = globals.get_int(262145 + 17424)
           else
             weedOffset2 = 0
           end
           local weedProduct = stats.get_int("MPX_PRODTOTALFORFACTORY3")
-          weedTotal = ((globals.get_int(262145 + 17323) + weedOffset1 + weedOffset2) * weedProduct)
+          weedTotal = ((globals.get_int(262145 + 17412) + weedOffset1 + weedOffset2) * weedProduct)
           ImGui.Text("Product:"); ImGui.SameLine(); ImGui.Dummy(5, 1); ImGui.SameLine(); ImGui.ProgressBar(
             (weedProduct / 80), 160, 25,
             tostring(weedProduct) .. " Pounds (" .. tostring(math.floor(weedProduct / 8 * 10)) .. "%)")
@@ -529,17 +529,17 @@ if GetBuildNumber() == TAGET_BUILD then
             CFG.save("fdUpdgrade2", fdUpdgrade2)
           end
           if fdUpdgrade1 then
-            fdOffset1 = globals.get_int(262145 + 17325)
+            fdOffset1 = globals.get_int(262145 + 17414)
           else
             fdOffset1 = 0
           end
           if fdUpdgrade2 then
-            fdOffset2 = globals.get_int(262145 + 17331)
+            fdOffset2 = globals.get_int(262145 + 17420)
           else
             fdOffset2 = 0
           end
           local fdProduct = stats.get_int("MPX_PRODTOTALFORFACTORY4")
-          fdTotal = ((globals.get_int(262145 + 17319) + fdOffset1 + fdOffset2) * fdProduct)
+          fdTotal = ((globals.get_int(262145 + 17408) + fdOffset1 + fdOffset2) * fdProduct)
           ImGui.Text("Product:"); ImGui.SameLine(); ImGui.Dummy(5, 1); ImGui.SameLine(); ImGui.ProgressBar(
             (fdProduct / 60), 160, 25, tostring(fdProduct) .. " Boxes (" .. tostring(math.floor(fdProduct / 6 * 10)) ..
             "%)")
@@ -558,17 +558,17 @@ if GetBuildNumber() == TAGET_BUILD then
             CFG.save("bunkerUpdgrade2", bunkerUpdgrade2)
           end
           if bunkerUpdgrade1 then
-            bunkerOffset1 = globals.get_int(262145 + 21256)
+            bunkerOffset1 = globals.get_int(262145 + 21345)
           else
             bunkerOffset1 = 0
           end
           if bunkerUpdgrade2 then
-            bunkerOffset2 = globals.get_int(262145 + 21255)
+            bunkerOffset2 = globals.get_int(262145 + 21344)
           else
             bunkerOffset2 = 0
           end
           local bunkerProduct = stats.get_int("MPX_PRODTOTALFORFACTORY5")
-          bunkerTotal = ((globals.get_int(262145 + 21254) + bunkerOffset1 + bunkerOffset2) * bunkerProduct)
+          bunkerTotal = ((globals.get_int(262145 + 21343) + bunkerOffset1 + bunkerOffset2) * bunkerProduct)
           ImGui.Text("Product:"); ImGui.SameLine(); ImGui.Dummy(5, 1); ImGui.SameLine(); ImGui.ProgressBar(
             (bunkerProduct / 100), 160, 25, tostring(bunkerProduct) .. " Crates (" .. tostring(bunkerProduct) .. "%)")
           ImGui.SameLine(); ImGui.Dummy(10, 1); ImGui.SameLine(); ImGui.Text("Value:"); ImGui.SameLine(); ImGui.Text(
@@ -582,12 +582,12 @@ if GetBuildNumber() == TAGET_BUILD then
             CFG.save("acidUpdgrade", acidUpdgrade)
           end
           if acidUpdgrade then
-            acidOffset = globals.get_int(262145 + 17330)
+            acidOffset = globals.get_int(262145 + 17419)
           else
             acidOffset = 0
           end
           local acidProduct = stats.get_int("MPX_PRODTOTALFORFACTORY6")
-          acidTotal = ((globals.get_int(262145 + 17324) + acidOffset) * acidProduct)
+          acidTotal = ((globals.get_int(262145 + 17413) + acidOffset) * acidProduct)
           ImGui.Text("Product:"); ImGui.SameLine(); ImGui.Dummy(5, 1); ImGui.SameLine(); ImGui.ProgressBar(
             (acidProduct / 100), 160, 25,
             tostring(acidProduct) .. " Sheets (" .. tostring(math.floor(acidProduct / 16 * 10)) .. "%)")
