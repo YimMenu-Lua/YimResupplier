@@ -62,67 +62,67 @@ function getCEOvalue_G(crates)
   local G
   if crates ~= nil then
     if crates == 1 then
-      G = 15732
+      G = 15821
     end
     if crates == 2 then
-      G = 15733
+      G = 15822
     end
     if crates == 3 then
-      G = 15734
+      G = 15823
     end
     if crates == 4 or crates == 5 then
-      G = 15735
+      G = 15824
     end
     if crates == 6 or crates == 7 then
-      G = 15736
+      G = 15825
     end
     if crates == 8 or crates == 9 then
-      G = 15737
+      G = 15826
     end
     if crates >= 10 and crates <= 14 then
-      G = 15738
+      G = 15827
     end
     if crates >= 15 and crates <= 19 then
-      G = 15739
+      G = 15828
     end
     if crates >= 20 and crates <= 24 then
-      G = 15740
+      G = 15829
     end
     if crates >= 25 and crates <= 29 then
-      G = 15741
+      G = 15830
     end
     if crates >= 30 and crates <= 34 then
-      G = 15742
+      G = 15831
     end
     if crates >= 35 and crates <= 39 then
-      G = 15743
+      G = 15832
     end
     if crates >= 40 and crates <= 44 then
-      G = 15744
+      G = 15833
     end
     if crates >= 45 and crates <= 49 then
-      G = 15745
+      G = 15834
     end
     if crates >= 50 and crates <= 59 then
-      G = 15746
+      G = 15835
     end
     if crates >= 60 and crates <= 69 then
-      G = 15747
+      G = 15836
     end
     if crates >= 70 and crates <= 79 then
-      G = 15748
+      G = 15837
     end
     if crates >= 80 and crates <= 89 then
-      G = 15749
+      G = 15838
     end
     if crates >= 90 and crates <= 99 then
-      G = 15750
+      G = 15839
     end
     if crates >= 100 and crates <= 110 then
-      G = 15751
+      G = 15840
     end
     if crates == 111 then
-      G = 15752
+      G = 15841
     end
   else
     G = 0
